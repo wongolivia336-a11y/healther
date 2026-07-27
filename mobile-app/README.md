@@ -1,5 +1,7 @@
 # Healther Mobile
 
+![Healther Mobile 现代简约 2.5D 预览](mobile-preview-v2.png)
+
 Healther 的正式 React + Capacitor 安卓工程。根目录的静态页面继续作为设计原型，本目录用于真实功能开发。
 
 ## 第一里程碑
@@ -127,4 +129,3 @@ android\app\build\outputs\apk\debug\app-debug.apk
 4. 完善日期、停药和多时段服药；
 5. 开发健康档案和报告图片存储；
 6. 接入公共食物数据及权威科普内容后台。
-

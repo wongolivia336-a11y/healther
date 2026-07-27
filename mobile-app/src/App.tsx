@@ -153,7 +153,7 @@ export default function App() {
 
       <section className="hero">
         <div><span>{pending.length} 项待处理</span><h2>今日用药</h2><p>每种药都可以设置自己的重复提醒规则</p></div>
-        <img src="/assets/illustrations/medication-hero.png" alt="" />
+        <img src="/assets/illustrations/medication-hero-v2.png" alt="" />
       </section>
 
       <div className="section-title"><h2>待处理</h2><button onClick={() => { setEditing(null); setSheetOpen(true); }}>＋ 新增药物</button></div>

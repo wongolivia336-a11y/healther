@@ -8,6 +8,8 @@ dist/
 *.log
 reference/
 prototype-preview.png
+art-food-v2.png
+art-learn-v2.png
 .pnpm-store/
 *.tsbuildinfo
 mobile-app/capacitor.config.js

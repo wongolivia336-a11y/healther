@@ -11,7 +11,7 @@
 
 正式 React + Capacitor 安卓工程已经在 [`mobile-app/`](mobile-app/) 开始开发。当前第一里程碑是可靠用药提醒闭环，开发状态见 [`mobile-app/README.md`](mobile-app/README.md)。
 
-![Healther 原型预览](prototype-preview-v3.png)
+![Healther 现代简约 2.5D 原型预览](art-home-v2.png)
 
 ## 当前功能
 
@@ -129,9 +129,11 @@ Healther 当前是健康记录与提醒工具，不是医疗诊断或用药审�
 
 当前三张主插画使用 OpenAI 内置图像生成能力为本项目生成：
 
-- `medication-hero.png`
-- `food-guide.png`
-- `learning-path.png`
+- `medication-hero-v2.png`
+- `food-guide-v2.png`
+- `learning-path-v2.png`
+
+当前视觉采用现代极简 2.5D 风格：无人像、低饱和、哑光几何体和大面积留白。旧版插画保留在资产目录中作为设计回退。
 
 界面已经实际引入以下第三方开源 SVG，并在对应目录保留许可证：
 
