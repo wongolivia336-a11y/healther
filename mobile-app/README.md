@@ -1,0 +1,130 @@
+# Healther Mobile
+
+Healther 的正式 React + Capacitor 安卓工程。根目录的静态页面继续作为设计原型，本目录用于真实功能开发。
+
+## 第一里程碑
+
+当前集中实现可靠用药提醒闭环：
+
+```text
+新增或编辑药物
+    ↓
+设置时间、重复间隔、次数和稍后时长
+    ↓
+保存到本地数据库
+    ↓
+安排未来 14 天安卓本地通知
+    ↓
+已服 / 跳过 / 稍后
+    ↓
+记录用药事件
+```
+
+## 已实现
+
+- React + TypeScript + Vite 正式工程；
+- Capacitor Android 原生工程；
+- 浏览器预览使用本地存储；
+- Android 使用 SQLite；
+- 药物与用药事件数据模型；
+- 每种药单独设置：
+  - 首次提醒时间；
+  - 重复间隔；
+  - 最大重复次数；
+  - 默认稍后时长；
+  - 类别、剂量、备注和启用状态；
+- 通知操作：已服、跳过、稍后；
+- 未来 14 天滚动通知窗口；
+- 点击已服或跳过时仅取消当天剩余提醒，不删除未来日期；
+- 稍后会重新安排当天的提醒序列；
+- Android 通知频道、通知权限、精确闹钟设置检查；
+- 重启恢复由 Capacitor Local Notifications 插件接收系统启动事件；
+- 禁止 Android 系统自动云备份本地健康数据库。
+
+## 数据存储
+
+### Android
+
+使用 `@capacitor-community/sqlite`：
+
+- `medications`：保存药物方案 JSON；
+- `medication_events`：保存每天的处理结果。
+
+### 浏览器
+
+使用 `localStorage` 作为开发预览适配层。浏览器不会触发真实安卓系统通知。
+
+## 通知可靠性
+
+项目使用 `@capacitor/local-notifications`：
+
+- Android 13+ 请求通知权限；
+- Android 12+ 检查精确闹钟设置；
+- `AndroidManifest.xml` 声明 `SCHEDULE_EXACT_ALARM`；
+- 使用 `allowWhileIdle` 尽量在 Doze 状态下触发；
+- 插件负责接收设备重启广播并恢复本地通知。
+
+OPPO 真机仍需单独验证：
+
+- 通知权限；
+- 精确闹钟权限；
+- 后台运行和电池优化；
+- 自启动或关联启动设置；
+- 重启后恢复；
+- 锁屏通知操作。
+
+## 本地开发
+
+```powershell
+cd "E:\OneDrive\文档\mum\mobile-app"
+pnpm install
+pnpm run typecheck
+pnpm run build
+pnpm run dev
+```
+
+浏览器预览：
+
+```text
+http://127.0.0.1:3001/
+```
+
+同步 Android：
+
+```powershell
+pnpm run build
+npx cap sync android
+```
+
+## APK 构建环境
+
+当前机器尚未安装 JDK 和 Android SDK，因此还不能运行 Gradle 生成 APK。需要：
+
+- JDK 21；
+- Android SDK；
+- Android SDK Platform 36；
+- Android Build Tools；
+- 正确设置 `JAVA_HOME` 和 `ANDROID_HOME`。
+
+环境完成后：
+
+```powershell
+cd "E:\OneDrive\文档\mum\mobile-app\android"
+.\gradlew.bat assembleDebug
+```
+
+调试 APK 默认生成在：
+
+```text
+android\app\build\outputs\apk\debug\app-debug.apk
+```
+
+## 下一步
+
+1. 安装 Android 构建环境并生成首个 APK；
+2. OPPO 真机验证通知权限和重复提醒；
+3. 增加滚动窗口续排机制；
+4. 完善日期、停药和多时段服药；
+5. 开发健康档案和报告图片存储；
+6. 接入公共食物数据及权威科普内容后台。
+

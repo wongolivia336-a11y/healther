@@ -8,3 +8,12 @@ dist/
 *.log
 reference/
 prototype-preview.png
+.pnpm-store/
+*.tsbuildinfo
+mobile-app/capacitor.config.js
+mobile-app/capacitor.config.d.ts
+mobile-app/vite.config.js
+mobile-app/vite.config.d.ts
+mobile-app/android/.gradle/
+mobile-app/android/**/build/
+mobile-app/android/local.properties

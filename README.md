@@ -9,6 +9,8 @@
 
 当前版本是可点击的 Web 原型，目标设备为 OPPO 安卓手机。后续计划在完成真实场景验证后，封装为可安装的安卓应用。
 
+正式 React + Capacitor 安卓工程已经在 [`mobile-app/`](mobile-app/) 开始开发。当前第一里程碑是可靠用药提醒闭环，开发状态见 [`mobile-app/README.md`](mobile-app/README.md)。
+
 ![Healther 原型预览](prototype-preview-v3.png)
 
 ## 当前功能
