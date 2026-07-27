@@ -8,18 +8,6 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <svg class="svg-sprite" aria-hidden="true">
-    <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></symbol>
-    <symbol id="i-records" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></symbol>
-    <symbol id="i-food" viewBox="0 0 24 24"><path d="M8 3v8a4 4 0 0 1-4 4V3M4 8h4M16 3v18M16 3c4 2 5 7 0 11"/></symbol>
-    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></symbol>
-    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></symbol>
-    <symbol id="i-pill" viewBox="0 0 24 24"><path d="M10.6 20.6 3.4 13.4a5 5 0 0 1 0-7.1l2.9-2.9a5 5 0 0 1 7.1 0l7.2 7.2a5 5 0 0 1 0 7.1l-2.9 2.9a5 5 0 0 1-7.1 0ZM6.5 16.5l10-10"/></symbol>
-    <symbol id="i-thyroid" viewBox="0 0 24 24"><path d="M12 10c-1-4-6-6-8-3-2 4 2 10 8 8M12 10c1-4 6-6 8-3 2 4-2 10-8 8M12 10v10"/></symbol>
-    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.9 4.9 7 7M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/></symbol>
-    <symbol id="i-liver" viewBox="0 0 24 24"><path d="M4 8c5-4 13-4 17 1 1 2 0 5-3 6-4 2-7-1-10 2-2 2-5 0-5-3 0-2 0-4 1-6Z"/><path d="M13 7c0 4 2 6 6 7"/></symbol>
-    <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 2S5 10 5 15a7 7 0 0 0 14 0c0-5-7-13-7-13Z"/></symbol>
-  </svg>
   <main class="prototype-shell" aria-label="本地健康助手可点击原型">
     <section class="phone">
       <header class="statusbar">
@@ -34,7 +22,7 @@
               <p class="eyebrow">7月27日 · 星期一</p>
               <h1>今日</h1>
             </div>
-            <button class="icon-button" aria-label="设置" data-open="settings"><svg><use href="#i-settings"/></svg></button>
+            <button class="icon-button" aria-label="设置" data-open="settings"><span class="vendor-icon lucide-settings"></span></button>
           </header>
 
           <article class="hero-card hero-with-art">
@@ -59,15 +47,15 @@
               <h2>复查安排</h2>
               <span class="status-pill warning">还有 1 天</span>
             </div>
-            <article class="review-card">
+            <article class="review-card" data-open="appointment">
               <div class="review-date">
-                <strong>28</strong>
-                <span>7 月</span>
+                <strong id="review-day">28</strong>
+                <span id="review-month">7 月</span>
               </div>
               <div class="review-copy">
-                <strong>消化内科复查</strong>
-                <span>上海市第一人民医院 · 张医生</span>
-                <span>肝功能、血脂、血糖等 4 项</span>
+                <strong id="review-title">消化内科复查</strong>
+                <span id="review-place">上海市第一人民医院 · 张医生</span>
+                <span id="review-tests">肝功能、血脂、血糖等 4 项</span>
               </div>
             </article>
             <button class="primary-button" data-open="prep">开始五分钟复诊准备</button>
@@ -174,18 +162,28 @@
           <article class="food-result" id="food-result">
             <div class="food-result-head">
               <div>
-                <span class="status-pill success">更适合</span>
+                <span class="status-pill success" id="food-rating">更适合</span>
                 <h2 id="food-name">苹果</h2>
               </div>
               <div class="food-emoji" id="food-emoji">🍎</div>
             </div>
-            <div class="reason-list">
-              <div><span class="reason-icon green">糖</span><p><b>糖尿病</b><br>可作为水果选择，注意一次食用量。</p></div>
-              <div><span class="reason-icon orange">脂</span><p><b>胆固醇</b><br>天然不含胆固醇，可替代高脂零食。</p></div>
-              <div><span class="reason-icon blue">肝</span><p><b>肝脏管理</b><br>普通份量通常可选，不宣称治疗作用。</p></div>
+            <div class="nutrition-summary">
+              <div class="calorie-ring"><b id="food-calories">52</b><span>千卡<br>每 100g</span></div>
+              <div class="nutrient-grid">
+                <span><b id="food-carbs">13.8g</b>碳水</span>
+                <span><b id="food-protein">0.3g</b>蛋白质</span>
+                <span><b id="food-fat">0.2g</b>脂肪</span>
+                <span><b id="food-fiber">2.4g</b>膳食纤维</span>
+              </div>
             </div>
-            <div class="portion-note"><b>食用建议</b><span>每次约一个拳头大小，避免一次吃太多。</span></div>
-            <p class="disclaimer">这是保守的通用筛选，不替代医生或营养师建议。</p>
+            <div class="reason-list">
+              <div><span class="reason-icon green">糖</span><p><b>糖尿病</b><br><span id="food-diabetes">可作为水果选择，注意一次食用量。</span></p></div>
+              <div><span class="reason-icon orange">脂</span><p><b>胆固醇</b><br><span id="food-lipid">天然不含胆固醇，可替代高脂零食。</span></p></div>
+              <div><span class="reason-icon blue">肝</span><p><b>肝脏管理</b><br><span id="food-liver">普通份量通常可选，不宣称治疗作用。</span></p></div>
+            </div>
+            <div class="portion-note"><b>食用建议</b><span id="food-portion">每次约一个拳头大小，避免一次吃太多。</span></div>
+            <div class="data-provenance"><b>营养数据来源</b><span id="food-source">USDA FoodData Central · 原型示例值</span></div>
+            <p class="disclaimer">这是保守的通用筛选，不替代医生或营养师建议。正式数据需按具体食物条目核对。</p>
           </article>
         </section>
 
@@ -204,29 +202,34 @@
             <button class="filter">常见问题</button>
           </div>
 
+          <article class="source-standard">
+            <span class="source-shield">✓</span>
+            <div><b>只收录可核验的权威资料</b><p>优先政府卫生机构、专业学会指南和患者科普；保留原文链接、发布日期与复核状态。</p></div>
+          </article>
+
           <article class="featured-article" data-open="article">
             <div class="article-visual"><img src="assets/illustrations/learning-path.png" alt="长期健康管理学习路径插画"><span>安心了解</span></div>
             <div class="article-body">
               <span class="status-pill info">一句话结论</span>
               <h2>为什么慢性病需要长期管理？</h2>
               <p>长期管理的目标，是降低波动和未来风险，让生活保持稳定。</p>
-              <small>来源：权威患者科普示例 · 2026-07-20</small>
+              <small>来源：NIDDK · 最后复核 2026-07-27</small>
             </div>
           </article>
 
           <div class="article-list">
-            <button data-open="article"><span><b>自免肝治疗后，复查在看什么？</b><small>约 3 分钟</small></span><i>›</i></button>
-            <button data-open="article"><span><b>长期服药时，怎样准备复诊问题？</b><small>约 4 分钟</small></span><i>›</i></button>
-            <button data-open="article"><span><b>指标有波动，是否等于病情恶化？</b><small>约 3 分钟</small></span><i>›</i></button>
+            <button data-open="article"><span><b>自免肝治疗后，复查在看什么？</b><small>NIDDK · 患者科普 · 约 3 分钟</small></span><i>›</i></button>
+            <button data-open="article"><span><b>PBC 为什么需要长期随访？</b><small>AASLD · 实践指南 · 约 4 分钟</small></span><i>›</i></button>
+            <button data-open="article"><span><b>2025 自免肝指南更新了什么？</b><small>EASL · 临床指南 · 约 4 分钟</small></span><i>›</i></button>
           </div>
         </section>
       </div>
 
       <nav class="bottom-nav" aria-label="主导航">
-        <button class="active" data-tab="today"><svg><use href="#i-home"/></svg>今日</button>
-        <button data-tab="records"><svg><use href="#i-records"/></svg>健康档案</button>
-        <button data-tab="food"><svg><use href="#i-food"/></svg>饮食助手</button>
-        <button data-tab="learn"><svg><use href="#i-heart"/></svg>安心科普</button>
+        <button class="active" data-tab="today"><span class="vendor-icon lucide-home"></span>今日</button>
+        <button data-tab="records"><span class="vendor-icon lucide-file"></span>健康档案</button>
+        <button data-tab="food"><span class="vendor-icon lucide-food"></span>饮食助手</button>
+        <button data-tab="learn"><span class="vendor-icon lucide-book"></span>安心科普</button>
       </nav>
 
       <div class="sheet-backdrop" id="sheet-backdrop"></div>
@@ -265,19 +268,71 @@
         <p>继续执行已有的治疗和复查安排。阅读这篇内容不需要改变当前用药。</p>
         <h3>下次可以问医生</h3>
         <p>“我最近的指标变化，是否需要调整下一次复查时间？”</p>
-        <div class="source-box">权威患者科普示例 · 发布日期 2026-07-20<br>正式版将展示可核验的原始链接与翻译说明。</div>
+        <div class="source-box">
+          <b>当前收录来源</b><br>
+          <a href="https://www.niddk.nih.gov/health-information/liver-disease/autoimmune-hepatitis" target="_blank" rel="noreferrer">NIDDK · Autoimmune Hepatitis</a><br>
+          <a href="https://www.aasld.org/practice-guidelines/primary-biliary-cholangitis" target="_blank" rel="noreferrer">AASLD · Primary Biliary Cholangitis</a><br>
+          <a href="https://easl.eu/news/easl-cpgs-autoimmune-hepatitis-2025/" target="_blank" rel="noreferrer">EASL · 2025 AIH Guideline</a>
+        </div>
       </section>
 
       <section class="bottom-sheet" id="settings-sheet" aria-hidden="true">
         <div class="sheet-handle"></div>
         <h2>设置</h2>
         <div class="settings-list">
-          <button>药物方案管理 <span>›</span></button>
-          <button>提醒设置 <span>›</span></button>
+          <button data-open="medication">药物方案管理 <span>›</span></button>
+          <button data-open="appointment">复查与就诊时间 <span>›</span></button>
           <button>本地数据导出 <span>›</span></button>
           <button>免责声明 <span>›</span></button>
         </div>
         <div class="local-note">▣ 所有数据仅保存在本机，不上传、不与他人共享。</div>
+      </section>
+
+      <section class="bottom-sheet" id="medication-sheet" aria-hidden="true">
+        <div class="sheet-handle"></div>
+        <div class="sheet-step"><span>编辑用药提醒</span><b>本机保存</b></div>
+        <form id="medication-form" class="edit-form">
+          <input type="hidden" id="med-id">
+          <label>药物<select id="med-select"></select></label>
+          <label>药物名称<input id="med-name" required></label>
+          <label>提醒时间<input id="med-time" type="time" required></label>
+          <label>剂量与备注<input id="med-detail"></label>
+          <label>类别
+            <select id="med-kind">
+              <option value="thyroid">甲状腺相关</option>
+              <option value="steroid">激素类</option>
+              <option value="liver">肝胆相关</option>
+              <option value="diabetes">血糖相关</option>
+            </select>
+          </label>
+          <button class="primary-button" type="submit">保存修改</button>
+        </form>
+      </section>
+
+      <section class="bottom-sheet" id="snooze-sheet" aria-hidden="true">
+        <div class="sheet-handle"></div>
+        <div class="sheet-step"><span>稍后提醒</span><b id="snooze-med-name"></b></div>
+        <h2>希望什么时候再次提醒？</h2>
+        <div class="snooze-grid">
+          <button data-minutes="15">15 分钟后</button>
+          <button data-minutes="30">30 分钟后</button>
+          <button data-minutes="60">1 小时后</button>
+          <button data-minutes="120">2 小时后</button>
+        </div>
+        <label class="field-label">自定义时间<input id="snooze-time" type="time"></label>
+        <button class="primary-button" id="save-snooze">确定</button>
+      </section>
+
+      <section class="bottom-sheet" id="appointment-sheet" aria-hidden="true">
+        <div class="sheet-handle"></div>
+        <div class="sheet-step"><span>复查与就诊时间</span><b>本机保存</b></div>
+        <form id="appointment-form" class="edit-form">
+          <label>事项名称<input id="appointment-title" value="消化内科复查" required></label>
+          <label>日期与时间<input id="appointment-datetime" type="datetime-local" value="2026-07-28T09:00" required></label>
+          <label>医院和医生<input id="appointment-place" value="上海市第一人民医院 · 张医生"></label>
+          <label>检查项目<textarea id="appointment-tests">肝功能、血脂、血糖等 4 项</textarea></label>
+          <button class="primary-button" type="submit">保存复查安排</button>
+        </form>
       </section>
 
       <div class="toast" id="toast"></div>
