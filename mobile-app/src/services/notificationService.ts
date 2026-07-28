@@ -211,3 +211,12 @@ export async function scheduleReviewReminder(review: {
   });
   if (notifications.length) await LocalNotifications.schedule({ notifications });
 }
+
+export async function cancelReviewReminder(reviewId: string): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  const pending = await LocalNotifications.getPending();
+  const notifications = pending.notifications
+    .filter(item => item.extra?.reviewId === reviewId)
+    .map(item => ({ id: item.id }));
+  if (notifications.length) await LocalNotifications.cancel({ notifications });
+}

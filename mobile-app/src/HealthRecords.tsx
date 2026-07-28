@@ -2,13 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import type { HealthRecord, HealthRecordKind, PostVisitDraft } from "./types";
 import {
   clearPostVisitDraft,
-  deleteHealthRecord,
   getPostVisitDraft,
   listHealthRecords,
-  saveHealthRecord,
   savePostVisitDraft
 } from "./data/healthRepository";
-import { scheduleReviewReminder } from "./services/notificationService";
+import { removeHealthRecord, saveHealthRecordBundle } from "./services/healthRecordService";
 
 const kindMeta: Record<HealthRecordKind, { label: string; icon: string; color: string }> = {
   visit: { label: "就诊", icon: "医", color: "blue" },
@@ -38,37 +36,23 @@ export function HealthRecords({ announce }: { announce: (message: string) => voi
     [records, tab]
   );
 
-  async function save(record: HealthRecord) {
-    await saveHealthRecord(record);
-    setRecords(current => [...current.filter(item => item.id !== record.id), record]);
+  async function save(nextRecords: HealthRecord[]) {
+    const result = await saveHealthRecordBundle(nextRecords);
+    setRecords(current => [...current.filter(item => !nextRecords.some(next => next.id === item.id)), ...nextRecords]);
     setAdding(false);
-    announce("健康记录已保存到本机");
+    announce(result.reminderFailures.length ? "记录已保存；部分复查提醒安排失败" : "健康记录与复查提醒已保存");
   }
   async function savePostVisit(nextRecords: HealthRecord[]) {
-    for (const record of nextRecords) await saveHealthRecord(record);
-    const review = nextRecords.find(item => item.kind === "review");
-    let reminderScheduled = false;
-    if (review) {
-      try {
-        await scheduleReviewReminder({
-          id: review.id,
-          date: review.date,
-          title: review.title,
-          items: review.details["需要检查"] || review.summary
-        });
-        reminderScheduled = true;
-      } catch {
-        reminderScheduled = false;
-      }
-    }
+    const result = await saveHealthRecordBundle(nextRecords);
+    const review = nextRecords.some(item => item.kind === "review");
     setRecords(current => [...current.filter(item => !nextRecords.some(next => next.id === item.id)), ...nextRecords]);
     setPostVisit(false);
-    announce(review ? reminderScheduled ? "就诊整理已保存，复查提醒已安排" : "记录已保存；请检查通知权限" : "就诊整理已保存");
+    announce(review ? result.reminderFailures.length ? "记录已保存；请检查复查通知权限" : "就诊整理已保存，复查提醒已安排" : "就诊整理已保存");
   }
 
   async function remove(record: HealthRecord) {
     if (!window.confirm(`确定删除“${record.title}”吗？原始图片也会从本机记录中移除。`)) return;
-    await deleteHealthRecord(record.id);
+    await removeHealthRecord(record);
     setRecords(current => current.filter(item => item.id !== record.id));
     setDetail(null);
     announce("记录已删除");
@@ -279,7 +263,7 @@ function RecordDetail({ record, onClose, onDelete }: { record: HealthRecord; onC
   );
 }
 
-function RecordEditor({ onClose, onSave }: { onClose: () => void; onSave: (record: HealthRecord) => Promise<void> }) {
+function RecordEditor({ onClose, onSave }: { onClose: () => void; onSave: (records: HealthRecord[]) => Promise<void> }) {
   const [kind, setKind] = useState<HealthRecordKind>("visit");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [title, setTitle] = useState("");
@@ -288,6 +272,7 @@ function RecordEditor({ onClose, onSave }: { onClose: () => void; onSave: (recor
   const [doctor, setDoctor] = useState("");
   const [advice, setAdvice] = useState("");
   const [nextReview, setNextReview] = useState("");
+  const [reviewItems, setReviewItems] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [savingImages, setSavingImages] = useState(false);
 
@@ -304,18 +289,38 @@ function RecordEditor({ onClose, onSave }: { onClose: () => void; onSave: (recor
 
   function submit() {
     const time = new Date().toISOString();
-    void onSave({
-      id: crypto.randomUUID(), kind, date,
+    const id = crypto.randomUUID();
+    const baseRecord: HealthRecord = {
+      id, kind, date,
       title: title.trim() || `${kindMeta[kind].label}记录`,
       summary: summary.trim() || "已完成记录",
       details: {
         "医院与科室": hospital.trim(),
         "医生": doctor.trim(),
         "医生主要意见或备注": advice.trim(),
-        "下一次复查": nextReview
+        "需要检查": kind === "review" ? reviewItems.trim() : "",
+        "下一次复查": kind !== "review" ? nextReview : ""
       },
       images, createdAt: time, updatedAt: time
+    };
+    const records = [baseRecord];
+    if (kind !== "review" && nextReview) records.push({
+      id: `${id}-review`,
+      kind: "review",
+      date: nextReview,
+      title: `${hospital.trim() || title.trim() || "门诊"}复查`,
+      summary: reviewItems.trim() || "检查项目待确认",
+      details: {
+        "医院与科室": hospital.trim(),
+        "需要检查": reviewItems.trim(),
+        "关联记录": baseRecord.title,
+        "提醒安排": "复查前一天 19:00、复查当天 07:30"
+      },
+      images: [],
+      createdAt: time,
+      updatedAt: time
     });
+    void onSave(records);
   }
 
   return (
@@ -331,7 +336,10 @@ function RecordEditor({ onClose, onSave }: { onClose: () => void; onSave: (recor
         <label>一句话摘要<input value={summary} onChange={event => setSummary(event.target.value)} placeholder="例如：继续当前治疗方案" /></label>
         <label>医院与科室<input value={hospital} onChange={event => setHospital(event.target.value)} placeholder="例如：第一人民医院 · 消化内科" /></label>
         <label>医生主要意见或备注<textarea value={advice} onChange={event => setAdvice(event.target.value)} placeholder="记录医生说了什么、诊断或用药变化" /></label>
-        <label>下次复查日期<input type="date" value={nextReview} onChange={event => setNextReview(event.target.value)} /></label>
+        {kind === "review" ? <label>需要检查的项目<textarea value={reviewItems} onChange={event => setReviewItems(event.target.value)} placeholder="例如：肝功能、血脂、空腹血糖" /></label> : <>
+          <label>下次复查日期<input type="date" value={nextReview} onChange={event => setNextReview(event.target.value)} /></label>
+          {nextReview && <label>复查项目<textarea value={reviewItems} onChange={event => setReviewItems(event.target.value)} placeholder="保存后会生成独立复查计划并安排提醒" /></label>}
+        </>}
         <div className="native-upload">
           <label><b>拍照</b><span>拍摄纸质报告</span><input type="file" accept="image/*" capture="environment" onChange={event => void pickImages(event.target.files)} /></label>
           <label><b>相册</b><span>最多保存 8 张</span><input type="file" accept="image/*" multiple onChange={event => void pickImages(event.target.files)} /></label>
