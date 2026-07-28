@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { HealthRecord, HealthRecordKind } from "./types";
 import { deleteHealthRecord, listHealthRecords, saveHealthRecord } from "./data/healthRepository";
+import { scheduleReviewReminder } from "./services/notificationService";
 
 const kindMeta: Record<HealthRecordKind, { label: string; icon: string; color: string }> = {
   visit: { label: "就诊", icon: "医", color: "blue" },
@@ -22,6 +23,7 @@ export function HealthRecords({ announce }: { announce: (message: string) => voi
   const [tab, setTab] = useState<"all" | HealthRecordKind>("all");
   const [detail, setDetail] = useState<HealthRecord | null>(null);
   const [adding, setAdding] = useState(false);
+  const [postVisit, setPostVisit] = useState(false);
 
   useEffect(() => { void listHealthRecords().then(setRecords); }, []);
   const visible = useMemo(
@@ -34,6 +36,27 @@ export function HealthRecords({ announce }: { announce: (message: string) => voi
     setRecords(current => [...current.filter(item => item.id !== record.id), record]);
     setAdding(false);
     announce("健康记录已保存到本机");
+  }
+  async function savePostVisit(nextRecords: HealthRecord[]) {
+    for (const record of nextRecords) await saveHealthRecord(record);
+    const review = nextRecords.find(item => item.kind === "review");
+    let reminderScheduled = false;
+    if (review) {
+      try {
+        await scheduleReviewReminder({
+          id: review.id,
+          date: review.date,
+          title: review.title,
+          items: review.details["需要检查"] || review.summary
+        });
+        reminderScheduled = true;
+      } catch {
+        reminderScheduled = false;
+      }
+    }
+    setRecords(current => [...current.filter(item => !nextRecords.some(next => next.id === item.id)), ...nextRecords]);
+    setPostVisit(false);
+    announce(review ? reminderScheduled ? "就诊整理已保存，复查提醒已安排" : "记录已保存；请检查通知权限" : "就诊整理已保存");
   }
 
   async function remove(record: HealthRecord) {
@@ -58,6 +81,7 @@ export function HealthRecords({ announce }: { announce: (message: string) => voi
         <div><b>{records.filter(item => item.kind === "report").length}</b><span>报告组</span></div>
         <button onClick={() => setAdding(true)}>拍照或相册上传</button>
       </section>
+      <button className="postvisit-entry" onClick={() => setPostVisit(true)}><span>＋</span><div><b>就诊后整理</b><small>按医生意见、诊断、用药和复查逐步填写</small></div><i>约 5 分钟 ›</i></button>
       <section className="health-timeline">
         {visible.length ? visible.map(record => {
           const meta = kindMeta[record.kind];
@@ -73,7 +97,125 @@ export function HealthRecords({ announce }: { announce: (message: string) => voi
       </section>
       {detail && <RecordDetail record={detail} onClose={() => setDetail(null)} onDelete={() => void remove(detail)} />}
       {adding && <RecordEditor onClose={() => setAdding(false)} onSave={save} />}
+      {postVisit && <PostVisitWizard onClose={() => setPostVisit(false)} onSave={savePostVisit} />}
     </>
+  );
+}
+
+type PostVisitDraft = {
+  date: string;
+  hospital: string;
+  doctor: string;
+  advice: string;
+  diagnosis: string;
+  medication: string;
+  reviewDate: string;
+  reviewItems: string;
+  question: string;
+  images: string[];
+};
+
+const postVisitSteps = [
+  ["这次去了哪里看诊？", "填写日期、医院、科室和医生。"],
+  ["医生主要说了什么？", "用自己的话记录即可，不需要复述专业术语。"],
+  ["诊断和身体有什么变化？", "没有变化也可以明确写下“无变化”。"],
+  ["用药方案如何调整？", "这里只记录医嘱，保存后仍需在用药方案中二次确认。"],
+  ["下一步什么时候复查？", "复查计划会进入健康档案，并安排前一天和当天提醒。"]
+];
+
+function PostVisitWizard({ onClose, onSave }: { onClose: () => void; onSave: (records: HealthRecord[]) => Promise<void> }) {
+  const [step, setStep] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [draft, setDraft] = useState<PostVisitDraft>({
+    date: new Date().toISOString().slice(0, 10), hospital: "", doctor: "", advice: "",
+    diagnosis: "", medication: "", reviewDate: "", reviewItems: "", question: "", images: []
+  });
+  const update = <K extends keyof PostVisitDraft>(key: K, value: PostVisitDraft[K]) => setDraft(current => ({ ...current, [key]: value }));
+
+  async function pickImages(files: FileList | null) {
+    if (!files?.length) return;
+    setSaving(true);
+    try {
+      const images = await Promise.all([...files].map(compressImage));
+      update("images", [...draft.images, ...images].slice(0, 8));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function finish() {
+    setSaving(true);
+    const time = new Date().toISOString();
+    const groupId = crypto.randomUUID();
+    const records: HealthRecord[] = [{
+      id: `visit-${groupId}`, kind: "visit", date: draft.date,
+      title: `${draft.hospital || "门诊"}就诊`,
+      summary: [draft.doctor, draft.advice].filter(Boolean).join(" · ") || "就诊后已整理",
+      details: {
+        "医院与科室": draft.hospital,
+        "医生": draft.doctor,
+        "医生主要意见": draft.advice,
+        "诊断与身体变化": draft.diagnosis,
+        "用药变化": draft.medication,
+        "下次想问医生": draft.question
+      },
+      images: draft.images, createdAt: time, updatedAt: time
+    }];
+    if (draft.medication.trim()) records.push({
+      id: `medication-${groupId}`, kind: "medication", date: draft.date,
+      title: "本次就诊的用药变化", summary: draft.medication,
+      details: {
+        "医生交代的变化": draft.medication,
+        "确认状态": "尚未同步到用药提醒，请在当前用药方案中核对后确认。"
+      },
+      images: [], createdAt: time, updatedAt: time
+    });
+    if (draft.reviewDate) records.push({
+      id: `review-${groupId}`, kind: "review", date: draft.reviewDate,
+      title: `${draft.hospital || "门诊"}复查`,
+      summary: draft.reviewItems || "检查项目待确认",
+      details: {
+        "医院与科室": draft.hospital,
+        "需要检查": draft.reviewItems,
+        "提醒安排": "复查前一天 19:00、复查当天 07:30",
+        "下次想问医生": draft.question
+      },
+      images: [], createdAt: time, updatedAt: time
+    });
+    try {
+      await onSave(records);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="sheet-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="editor-sheet postvisit-sheet">
+        <div className="handle" />
+        <header><div><small>就诊后整理 · {step + 1} / 5</small><h2>{postVisitSteps[step][0]}</h2></div><button onClick={onClose}>×</button></header>
+        <div className="wizard-progress"><i style={{ width: `${(step + 1) * 20}%` }} /></div>
+        <p className="wizard-help">{postVisitSteps[step][1]}</p>
+        {step === 0 && <>
+          <div className="field-grid"><label>就诊日期<input type="date" value={draft.date} onChange={event => update("date", event.target.value)} /></label><label>医生<input value={draft.doctor} onChange={event => update("doctor", event.target.value)} placeholder="例如：张医生" /></label></div>
+          <label>医院与科室<input value={draft.hospital} onChange={event => update("hospital", event.target.value)} placeholder="例如：第一人民医院 · 消化内科" /></label>
+          <div className="native-upload"><label><b>拍照</b><span>病历、处方或检查单</span><input type="file" accept="image/*" capture="environment" onChange={event => void pickImages(event.target.files)} /></label><label><b>相册</b><span>最多保存 8 张</span><input type="file" accept="image/*" multiple onChange={event => void pickImages(event.target.files)} /></label></div>
+          {draft.images.length > 0 && <div className="selected-images">已选择 {draft.images.length} 张原始资料</div>}
+        </>}
+        {step === 1 && <label>医生主要意见<textarea value={draft.advice} onChange={event => update("advice", event.target.value)} placeholder="例如：目前指标总体稳定，继续当前方案" /></label>}
+        {step === 2 && <label>诊断与身体变化<textarea value={draft.diagnosis} onChange={event => update("diagnosis", event.target.value)} placeholder="例如：诊断无变化；近期睡眠不太好" /></label>}
+        {step === 3 && <><label>本次用药变化<textarea value={draft.medication} onChange={event => update("medication", event.target.value)} placeholder="例如：甲泼尼龙调整为……；其他药物不变" /></label><div className="safety-note">记录不会直接修改服药提醒。保存后请在“当前用药方案”中核对并确认。</div></>}
+        {step === 4 && <>
+          <label>下次复查日期<input type="date" value={draft.reviewDate} onChange={event => update("reviewDate", event.target.value)} /></label>
+          <label>需要检查的项目<textarea value={draft.reviewItems} onChange={event => update("reviewItems", event.target.value)} placeholder="例如：肝功能、血脂、空腹血糖" /></label>
+          <label>下次想问医生<input value={draft.question} onChange={event => update("question", event.target.value)} /></label>
+        </>}
+        <div className="wizard-actions">
+          <button disabled={step === 0 || saving} onClick={() => setStep(current => current - 1)}>上一步</button>
+          <button className="save-button" disabled={saving || (step === 0 && !draft.date)} onClick={() => step < 4 ? setStep(current => current + 1) : void finish()}>{saving ? "正在保存…" : step === 4 ? "完成整理" : "保存并继续"}</button>
+        </div>
+      </section>
+    </div>
   );
 }
 

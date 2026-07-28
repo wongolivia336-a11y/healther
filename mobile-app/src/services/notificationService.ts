@@ -8,6 +8,7 @@ import type { Medication, NotificationCapability } from "../types";
 
 const ACTION_TYPE = "MEDICATION_ACTIONS";
 const CHANNEL_ID = "medication-reminders";
+const REVIEW_CHANNEL_ID = "review-reminders";
 
 function notificationId(key: string): number {
   let hash = 0;
@@ -57,6 +58,14 @@ export async function initializeNotifications(
     name: "用药提醒",
     description: "按药物方案提醒，并支持已服、跳过和稍后",
     importance: 5,
+    visibility: 1,
+    vibration: true
+  });
+  await LocalNotifications.createChannel({
+    id: REVIEW_CHANNEL_ID,
+    name: "复查与就诊提醒",
+    description: "在复查前一天和当天提醒检查项目与就诊安排",
+    importance: 4,
     visibility: 1,
     vibration: true
   });
@@ -154,4 +163,38 @@ export async function snoozeMedication(medication: Medication, dateKey = localDa
   await LocalNotifications.schedule({
     notifications
   });
+}
+
+export async function scheduleReviewReminder(review: {
+  id: string;
+  date: string;
+  title: string;
+  items: string;
+}): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  const pending = await LocalNotifications.getPending();
+  const old = pending.notifications.filter(item => item.extra?.reviewId === review.id).map(item => ({ id: item.id }));
+  if (old.length) await LocalNotifications.cancel({ notifications: old });
+
+  const reviewDay = new Date(`${review.date}T07:30:00`);
+  const previousDay = new Date(`${review.date}T19:00:00`);
+  previousDay.setDate(previousDay.getDate() - 1);
+  const notifications: LocalNotificationSchema[] = [];
+  if (previousDay.getTime() > Date.now()) notifications.push({
+    id: notificationId(`${review.id}-previous-day`),
+    title: `明天：${review.title}`,
+    body: review.items || "打开健康档案确认需要准备的资料",
+    channelId: REVIEW_CHANNEL_ID,
+    schedule: { at: previousDay, allowWhileIdle: true },
+    extra: { reviewId: review.id, reminderStage: "previous-day" }
+  });
+  if (reviewDay.getTime() > Date.now()) notifications.push({
+    id: notificationId(`${review.id}-same-day`),
+    title: `今天：${review.title}`,
+    body: review.items || "请带好报告和近期用药记录",
+    channelId: REVIEW_CHANNEL_ID,
+    schedule: { at: reviewDay, allowWhileIdle: true },
+    extra: { reviewId: review.id, reminderStage: "same-day" }
+  });
+  if (notifications.length) await LocalNotifications.schedule({ notifications });
 }
