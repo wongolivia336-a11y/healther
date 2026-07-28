@@ -123,6 +123,19 @@ export async function scheduleMedication(medication: Medication): Promise<void> 
   await LocalNotifications.schedule({ notifications });
 }
 
+export async function refreshMedicationSchedules(medications: Medication[]): Promise<{
+  scheduled: number;
+  failed: string[];
+}> {
+  if (!Capacitor.isNativePlatform()) return { scheduled: 0, failed: [] };
+  const enabled = medications.filter(item => item.enabled);
+  const results = await Promise.allSettled(enabled.map(scheduleMedication));
+  return {
+    scheduled: results.filter(result => result.status === "fulfilled").length,
+    failed: results.flatMap((result, index) => result.status === "rejected" ? [enabled[index].name] : [])
+  };
+}
+
 export async function cancelMedication(medicationId: string): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
   const pending = await LocalNotifications.getPending();

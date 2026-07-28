@@ -6,6 +6,7 @@ import {
   cancelMedicationForDate,
   initializeNotifications,
   requestExactAlarm,
+  refreshMedicationSchedules,
   scheduleMedication,
   snoozeMedication
 } from "./services/notificationService";
@@ -74,11 +75,26 @@ export default function App() {
   }, [page]);
 
   useEffect(() => {
-    void Promise.all([listMedications(), listEvents()]).then(([meds, storedEvents]) => {
-      setMedications(meds.sort((a, b) => a.time.localeCompare(b.time)));
-      setEvents(storedEvents);
-    });
-    void initializeNotifications(handleNotificationAction).then(setCapability);
+    void (async () => {
+      try {
+        const [meds, storedEvents, notificationCapability] = await Promise.all([
+          listMedications(),
+          listEvents(),
+          initializeNotifications(handleNotificationAction)
+        ]);
+        const sorted = meds.sort((a, b) => a.time.localeCompare(b.time));
+        medicationRef.current = sorted;
+        setMedications(sorted);
+        setEvents(storedEvents);
+        setCapability(notificationCapability);
+        if (notificationCapability.platform === "android" && notificationCapability.permission === "granted") {
+          const refresh = await refreshMedicationSchedules(sorted);
+          if (refresh.failed.length) announce(`${refresh.failed.join("、")}的提醒续排失败，请检查设置`);
+        }
+      } catch {
+        announce("本地数据或提醒初始化失败，请重新打开应用");
+      }
+    })();
   }, []);
 
   function announce(message: string) {
