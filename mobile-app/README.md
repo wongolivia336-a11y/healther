@@ -156,7 +156,7 @@ E:\AndroidDev\output\Healther-v0.1.0-debug.apk
 - minSdk：24
 - targetSdk：36
 - 签名：Android debug certificate，APK Signature Scheme v2
-- SHA-256：`15EAF200411CAA6625D94DC5C48EF87BC814A92CD4899D62BD77DFF599A7CA33`
+- SHA-256：`421042DCA0EA70FD81C6F48B369124E88344EF3AB589810BEA3D3FE898F088A9`
 
 调试签名仅用于家庭真机测试。对外正式分发前需要创建并离线保存正式签名密钥，生成 release APK 或 AAB。
 
