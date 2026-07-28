@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "contentVersion": 1,
+  "publishedAt": "2026-07-28T00:00:00+08:00",
+  "minimumAppVersion": 1,
+  "foods": "./foods-v1.json",
+  "articles": "./articles-v1.json"
+}

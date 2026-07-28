@@ -3,11 +3,16 @@ import type { UserProfile } from "./types";
 import { getUserProfile, saveUserProfile } from "./data/healthRepository";
 import { exportEncryptedBackup, restoreEncryptedBackup } from "./services/backupService";
 import { illustrations } from "./visualAssets";
+import { Icon } from "./Icon";
+import { checkForContentUpdates } from "./services/contentUpdateService";
+import { useContentSnapshot } from "./hooks/useContentSnapshot";
 
 export function Profile({ medicationCount, announce, onOpenTreatment }: { medicationCount: number; announce: (message: string) => void; onOpenTreatment: () => void }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editing, setEditing] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
+  const [contentOpen, setContentOpen] = useState(false);
+  const content = useContentSnapshot();
   useEffect(() => { void getUserProfile().then(setProfile); }, []);
   if (!profile) return <div className="empty-panel">正在加载本地资料…</div>;
 
@@ -34,13 +39,56 @@ export function Profile({ medicationCount, announce, onOpenTreatment }: { medica
         <button onClick={onOpenTreatment}><span>用药与复查提醒</span><small>管理 ›</small></button>
       </ProfileSection>
       <ProfileSection title="数据与应用">
+        <button onClick={() => setContentOpen(true)}><span>饮食与科普内容更新</span><small>v{content.version} ›</small></button>
         <button onClick={() => setBackupOpen(true)}><span>备份、恢复与换机</span><small>加密备份 ›</small></button>
         <button onClick={() => announce("所有健康数据仅保存在本机")}><span>隐私与数据说明</span><small>›</small></button>
         <button onClick={() => announce("当前使用正常字体")}><span>字体大小</span><small>正常 ›</small></button>
       </ProfileSection>
       {editing && <ProfileEditor profile={profile} onClose={() => setEditing(false)} onSave={save} />}
       {backupOpen && <BackupManager onClose={() => setBackupOpen(false)} announce={announce} />}
+      {contentOpen && <ContentManager onClose={() => setContentOpen(false)} announce={announce} />}
     </>
+  );
+}
+
+function ContentManager({ onClose, announce }: { onClose: () => void; announce: (message: string) => void }) {
+  const content = useContentSnapshot();
+  const [busy, setBusy] = useState(false);
+  const published = new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "short", day: "numeric" }).format(new Date(content.publishedAt));
+  const checked = content.checkedAt
+    ? new Intl.DateTimeFormat("zh-CN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(content.checkedAt))
+    : "尚未检查";
+
+  async function checkNow() {
+    setBusy(true);
+    const result = await checkForContentUpdates(true);
+    setBusy(false);
+    if (result.status === "updated") announce(`内容已更新到 v${result.snapshot.version}`);
+    else if (result.status === "current") announce("当前已经是最新审核内容");
+    else announce("暂时无法联网，继续使用本机内容");
+  }
+
+  return (
+    <div className="sheet-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="editor-sheet content-sheet">
+        <div className="handle" />
+        <header><div><small>只下载公开内容 · 不上传健康资料</small><h2>内容更新</h2></div><button onClick={onClose}>×</button></header>
+        <div className="content-status-hero">
+          <span><Icon name="privacy" size={22} /></span>
+          <div><b>已审核内容 v{content.version}</b><p>{content.source === "downloaded" ? "已同步并保存在本机" : "正在使用安装包内置内容"}</p></div>
+        </div>
+        <dl className="content-stats">
+          <div><dt>食物条目</dt><dd>{content.foods.length}</dd></div>
+          <div><dt>科普文章</dt><dd>{content.articles.length}</dd></div>
+          <div><dt>内容发布日期</dt><dd>{published}</dd></div>
+          <div><dt>上次检查</dt><dd>{checked}</dd></div>
+        </dl>
+        <div className="content-boundary"><b>更新安全边界</b><p>新内容必须先在 GitHub 完成人工审核。同步失败不会删除旧内容，也不会改变用药、报告或提醒。</p></div>
+        <button className="save-button icon-button" disabled={busy} onClick={() => void checkNow()}>
+          <Icon name="refresh" size={17} />{busy ? "正在检查…" : "立即检查更新"}
+        </button>
+      </section>
+    </div>
   );
 }
 

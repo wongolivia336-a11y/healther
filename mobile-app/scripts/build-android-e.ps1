@@ -1,6 +1,6 @@
 param(
     [string]$AndroidDevRoot = "E:\AndroidDev",
-    [string]$OutputName = "Healther-v0.1.0-debug.apk"
+    [string]$OutputName = "Healther-v0.2.0-family.apk"
 )
 
 $ErrorActionPreference = "Stop"

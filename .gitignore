@@ -14,6 +14,7 @@ records-flow-preview.png
 my-module-preview.png
 .pnpm-store/
 *.tsbuildinfo
+releases/*.apk
 mobile-app/capacitor.config.js
 mobile-app/capacitor.config.d.ts
 mobile-app/vite.config.js

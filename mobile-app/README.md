@@ -1,5 +1,25 @@
 # Healther Mobile
 
+## v0.2.0：内容可独立更新
+
+饮食助手与安心科普现在采用“安装包内置内容 + GitHub 已审核内容同步”的双层方案：
+
+- 首次安装和断网时始终可以使用内置内容；
+- 应用每天最多自动检查一次，也可在“我的 → 饮食与科普内容更新”手动检查；
+- 下载内容会先校验结构，失败时继续保留上一版；
+- 内容更新只下载公开的食物和科普资料，不上传用药、报告或个人健康资料；
+- GitHub Pages 不可用时自动尝试仓库中的静态内容文件；
+- 新内容必须先进入 `src/content/` 并经人工审核，采集草稿不能直接发布到妈妈的手机。
+
+内容维护命令：
+
+```powershell
+npm.cmd run content:build
+npm.cmd run content:validate
+```
+
+合并到 `main` 后，`.github/workflows/content-publish.yml` 会校验并发布静态内容。GitHub Pages 需要在仓库设置中选择 **GitHub Actions** 作为发布源。
+
 ![Healther Mobile 现代简约 2.5D 预览](mobile-preview-v2.png)
 
 Healther 的正式 React + Capacitor 安卓工程。根目录的静态页面继续作为设计原型，本目录用于真实功能开发。

@@ -16,6 +16,7 @@ import { FoodAssistant } from "./FoodAssistant";
 import { LearnCenter } from "./LearnCenter";
 import { Icon } from "./Icon";
 import { illustrations } from "./visualAssets";
+import { checkForContentUpdates } from "./services/contentUpdateService";
 
 const kindMeta = {
   thyroid: { label: "甲状腺用药", icon: "thyroid", color: "purple" },
@@ -100,6 +101,12 @@ export default function App() {
         announce("本地数据或提醒初始化失败，请重新打开应用");
       }
     })();
+  }, []);
+
+  useEffect(() => {
+    void checkForContentUpdates().then(result => {
+      if (result.status === "updated") announce("饮食与科普内容已更新");
+    });
   }, []);
 
   function announce(message: string) {

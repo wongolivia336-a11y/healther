@@ -1,12 +1,14 @@
 import { useMemo, useState } from "react";
 import {
-  confidenceMeta, learnArticles, learnTopics,
+  confidenceMeta, learnTopics,
   type LearnArticle, type LearnTopic
 } from "./content/learnData";
 import { Icon } from "./Icon";
 import { illustrations } from "./visualAssets";
+import { useContentSnapshot } from "./hooks/useContentSnapshot";
 
 export function LearnCenter() {
+  const { articles: learnArticles, version, source } = useContentSnapshot();
   const [topic, setTopic] = useState<"全部" | LearnTopic>("全部");
   const [selected, setSelected] = useState<LearnArticle | null>(null);
   const visibleArticles = useMemo(() =>
@@ -39,6 +41,7 @@ export function LearnCenter() {
   return (
     <section className="feature-page learn-page">
       <header className="topbar"><div><small>少一点搜索，多一点确定</small><h1>安心科普</h1></div></header>
+      <div className="content-freshness"><Icon name="privacy" size={14} /><span>已审核内容 v{version} · {source === "downloaded" ? "已同步到本机" : "离线内置"}</span></div>
       <section className="feature-hero learn-hero">
         <div><span>权威来源 · 有限推送</span><h2>慢性病需要理解，不需要被严重病例包围</h2><p>每篇都告诉你：现在是否需要改变安排。</p></div>
         <img src={illustrations.learningPath} alt="" />

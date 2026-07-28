@@ -1,12 +1,14 @@
 import { useMemo, useState } from "react";
 import {
-  foodCategories, foodRatingMeta, foods, foodSources, mealOptions,
+  foodCategories, foodRatingMeta, foodSources, mealOptions,
   type FoodCategory, type FoodItem
 } from "./content/foodData";
 import { Icon } from "./Icon";
 import { illustrations } from "./visualAssets";
+import { useContentSnapshot } from "./hooks/useContentSnapshot";
 
 export function FoodAssistant() {
+  const { foods, version, source } = useContentSnapshot();
   const [meal, setMeal] = useState<(typeof mealOptions)[number]>("午餐");
   const [category, setCategory] = useState<"全部" | FoodCategory>("全部");
   const [selected, setSelected] = useState<FoodItem | null>(null);
@@ -51,6 +53,7 @@ export function FoodAssistant() {
   return (
     <section className="feature-page food-page">
       <header className="topbar"><div><small>这顿饭怎么选</small><h1>饮食助手</h1></div></header>
+      <div className="content-freshness"><Icon name="privacy" size={14} /><span>已审核内容 v{version} · {source === "downloaded" ? "已同步到本机" : "离线内置"}</span></div>
       <section className="feature-hero food-hero">
         <div><span>保守通用筛选</span><h2>不用忌口一切，先把份量和搭配看清楚</h2><p>适合同时关注血糖、血脂、肝胆与骨骼健康。</p></div>
         <img src={illustrations.foodGuide} alt="" />
