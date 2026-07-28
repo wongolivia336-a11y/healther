@@ -10,6 +10,8 @@ reference/
 prototype-preview.png
 art-food-v2.png
 art-learn-v2.png
+records-flow-preview.png
+my-module-preview.png
 .pnpm-store/
 *.tsbuildinfo
 mobile-app/capacitor.config.js

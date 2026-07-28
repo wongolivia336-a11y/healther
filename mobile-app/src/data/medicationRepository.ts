@@ -40,7 +40,7 @@ const seedMedications: Medication[] = [
   }
 ];
 
-async function getNativeDb(): Promise<SQLiteDBConnection> {
+export async function getNativeDb(): Promise<SQLiteDBConnection> {
   if (db) return db;
   const consistency = await sqlite.checkConnectionsConsistency();
   const existing = await sqlite.isConnection("healther", false);

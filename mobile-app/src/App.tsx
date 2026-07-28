@@ -9,6 +9,8 @@ import {
   scheduleMedication,
   snoozeMedication
 } from "./services/notificationService";
+import { HealthRecords } from "./HealthRecords";
+import { Profile } from "./Profile";
 
 const kindMeta = {
   thyroid: { label: "甲状腺用药", icon: "thyroid", color: "purple" },
@@ -43,6 +45,10 @@ function draftFromMedication(item: Medication): MedicationDraft {
 }
 
 export default function App() {
+  const pageNames = ["today", "records", "food", "learn", "mine"] as const;
+  type PageName = typeof pageNames[number];
+  const initialPage = pageNames.includes(location.hash.slice(1) as PageName) ? location.hash.slice(1) as PageName : "today";
+  const [page, setPage] = useState<PageName>(initialPage);
   const [medications, setMedications] = useState<Medication[]>([]);
   const [events, setEvents] = useState<MedicationEvent[]>([]);
   const [capability, setCapability] = useState(emptyCapability);
@@ -63,6 +69,9 @@ export default function App() {
   useEffect(() => {
     medicationRef.current = medications;
   }, [medications]);
+  useEffect(() => {
+    history.replaceState(null, "", `#${page}`);
+  }, [page]);
 
   useEffect(() => {
     void Promise.all([listMedications(), listEvents()]).then(([meds, storedEvents]) => {
@@ -138,6 +147,7 @@ export default function App() {
 
   return (
     <main className="app-shell">
+      {page === "today" && <>
       <header className="topbar">
         <div><small>{new Intl.DateTimeFormat("zh-CN", { month: "long", day: "numeric", weekday: "long" }).format(new Date())}</small><h1>今日</h1></div>
         <button className="round-button" aria-label="提醒设置" onClick={() => void requestExactAlarm()}>◉</button>
@@ -181,12 +191,19 @@ export default function App() {
           </section>
         </>
       )}
+      </>}
+
+      {page === "records" && <HealthRecords announce={announce} />}
+      {page === "food" && <ComingSoon title="饮食助手" description="正式食物数据与保守筛选功能将在后续里程碑接入。" />}
+      {page === "learn" && <ComingSoon title="安心科普" description="权威来源的患者科普内容将在后续里程碑接入。" />}
+      {page === "mine" && <Profile medicationCount={medications.length} announce={announce} onOpenTreatment={() => setPage("today")} />}
 
       <nav className="bottom-nav">
-        <button className="active"><i className="icon home" />今日</button>
-        <button><i className="icon records" />健康档案</button>
-        <button><i className="icon food" />饮食助手</button>
-        <button><i className="icon learn" />安心科普</button>
+        <button className={page === "today" ? "active" : ""} onClick={() => setPage("today")}><i className="icon home" />今日</button>
+        <button className={page === "records" ? "active" : ""} onClick={() => setPage("records")}><i className="icon records" />健康档案</button>
+        <button className={page === "food" ? "active" : ""} onClick={() => setPage("food")}><i className="icon food" />饮食助手</button>
+        <button className={page === "learn" ? "active" : ""} onClick={() => setPage("learn")}><i className="icon learn" />安心科普</button>
+        <button className={page === "mine" ? "active" : ""} onClick={() => setPage("mine")}><i className="icon mine" />我的</button>
       </nav>
 
       {sheetOpen && (
@@ -199,6 +216,10 @@ export default function App() {
       {toast && <div className="toast">{toast}</div>}
     </main>
   );
+}
+
+function ComingSoon({ title, description }: { title: string; description: string }) {
+  return <><header className="topbar"><div><small>功能开发中</small><h1>{title}</h1></div></header><div className="empty-panel">{description}</div></>;
 }
 
 function MedicationCard({

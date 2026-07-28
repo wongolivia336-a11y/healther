@@ -34,4 +34,29 @@ export interface NotificationCapability {
 }
 
 export type MedicationDraft = Omit<Medication, "id" | "createdAt" | "updatedAt">;
+
+export type HealthRecordKind = "visit" | "report" | "medication" | "review";
+
+export interface HealthRecord {
+  id: string;
+  kind: HealthRecordKind;
+  date: string;
+  title: string;
+  summary: string;
+  details: Record<string, string>;
+  images: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserProfile {
+  name: string;
+  conditions: string[];
+  surgeries: string[];
+  allergies: string;
+  hospitals: string;
+  doctor: string;
+  emergencyContact: string;
+  updatedAt: string;
+}
 import type { PermissionState } from "@capacitor/core";

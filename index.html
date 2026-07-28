@@ -22,7 +22,7 @@
               <p class="eyebrow">7月27日 · 星期一</p>
               <h1>今日</h1>
             </div>
-            <button class="icon-button" aria-label="设置" data-open="settings"><span class="vendor-icon lucide-settings"></span></button>
+            <button class="icon-button" aria-label="进入我的" data-go-tab="mine"><span class="vendor-icon lucide-settings"></span></button>
           </header>
 
           <article class="hero-card hero-with-art">
@@ -87,7 +87,16 @@
             <button class="filter">复查</button>
           </div>
 
-          <section class="timeline">
+          <section class="report-entry-card">
+            <div>
+              <span class="status-pill info">原始资料</span>
+              <h2>就诊与检查报告</h2>
+              <p>拍照或从相册选择，按报告日期自动归档</p>
+            </div>
+            <button class="secondary-button compact" data-open="reports">管理报告</button>
+          </section>
+
+          <section class="timeline" id="health-timeline">
             <article class="timeline-item">
               <span class="timeline-icon blue">医</span>
               <div class="timeline-card">
@@ -223,6 +232,48 @@
             <button data-open="article"><span><b>2025 自免肝指南更新了什么？</b><small>EASL · 临床指南 · 约 4 分钟</small></span><i>›</i></button>
           </div>
         </section>
+
+        <section class="screen" data-screen="mine">
+          <header class="page-header">
+            <div>
+              <p class="eyebrow">个人资料与本地数据</p>
+              <h1>我的</h1>
+            </div>
+          </header>
+
+          <article class="profile-card">
+            <span class="profile-avatar">妈</span>
+            <div><h2>妈妈的健康助手</h2><p>资料只保存在这台手机</p></div>
+            <span class="status-pill success">本地模式</span>
+          </article>
+
+          <section class="mine-section">
+            <h2>健康资料</h2>
+            <div class="settings-list">
+              <button data-toast="原型中：编辑基础疾病与手术史">基础疾病与手术史 <span>糖尿病等 5 项 ›</span></button>
+              <button data-open="medication">当前治疗与用药方案 <span>4 种药物 ›</span></button>
+              <button data-toast="原型中：管理常用医院和医生">常用医院和医生 <span>›</span></button>
+            </div>
+          </section>
+
+          <section class="mine-section">
+            <h2>提醒与数据</h2>
+            <div class="settings-list">
+              <button data-open="appointment">复查与就诊提醒 <span>›</span></button>
+              <button data-toast="正式版将支持本地备份与换机恢复">备份、恢复与换机 <span>›</span></button>
+              <button data-toast="所有健康资料仅保存在本机">隐私与数据说明 <span>›</span></button>
+            </div>
+          </section>
+
+          <section class="mine-section">
+            <h2>应用设置</h2>
+            <div class="settings-list">
+              <button data-toast="当前使用正常字体">字体大小 <span>正常 ›</span></button>
+              <button data-toast="正式版将检查 OPPO 通知权限">通知权限 <span>检查 ›</span></button>
+              <button data-toast="Healther 当前为健康记录与提醒工具">免责声明 <span>›</span></button>
+            </div>
+          </section>
+        </section>
       </div>
 
       <nav class="bottom-nav" aria-label="主导航">
@@ -230,6 +281,7 @@
         <button data-tab="records"><span class="vendor-icon lucide-file"></span>健康档案</button>
         <button data-tab="food"><span class="vendor-icon lucide-food"></span>饮食助手</button>
         <button data-tab="learn"><span class="vendor-icon lucide-book"></span>安心科普</button>
+        <button data-tab="mine"><span class="vendor-icon lucide-settings"></span>我的</button>
       </nav>
 
       <div class="sheet-backdrop" id="sheet-backdrop"></div>
@@ -247,16 +299,58 @@
 
       <section class="bottom-sheet" id="postvisit-sheet" aria-hidden="true">
         <div class="sheet-handle"></div>
-        <div class="sheet-step"><span>就诊后整理</span><b>约 5 分钟</b></div>
-        <h2>把这次就诊整理完整</h2>
-        <div class="checklist">
-          <label><input type="checkbox"> 拍照保存病历、处方和检查单</label>
-          <label><input type="checkbox"> 记录医生的主要意见</label>
-          <label><input type="checkbox"> 确认诊断是否有变化</label>
-          <label><input type="checkbox"> 更新新增、停用或调整的药物</label>
-          <label><input type="checkbox"> 设置下次复查和检查项目</label>
-        </div>
-        <button class="primary-button" data-toast="已保存为草稿">开始整理</button>
+        <div class="sheet-step"><span>就诊后整理</span><b id="postvisit-step-label">1 / 5</b></div>
+        <div class="progress-track"><i id="postvisit-progress"></i></div>
+        <form id="postvisit-form" class="edit-form">
+          <div id="postvisit-content"></div>
+          <div class="sheet-actions">
+            <button class="secondary-button" type="button" id="postvisit-back">上一步</button>
+            <button class="primary-button" type="button" id="postvisit-next">下一步</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="bottom-sheet" id="reports-sheet" aria-hidden="true">
+        <div class="sheet-handle"></div>
+        <div class="sheet-step"><span>报告管理</span><b>仅保存在本机</b></div>
+        <h2>添加就诊或检查报告</h2>
+        <form id="report-form" class="edit-form">
+          <div class="upload-actions">
+            <label class="upload-choice">
+              <span class="upload-icon">拍</span>
+              <b>拍照上传</b>
+              <small>直接拍摄纸质报告</small>
+              <input id="report-camera" type="file" accept="image/*" capture="environment">
+            </label>
+            <label class="upload-choice">
+              <span class="upload-icon">册</span>
+              <b>相册上传</b>
+              <small>可一次选择多张</small>
+              <input id="report-gallery" type="file" accept="image/*" multiple>
+            </label>
+          </div>
+          <div id="report-file-state" class="file-state">尚未选择图片</div>
+          <label>报告日期<input id="report-date" type="date" required></label>
+          <label>资料类型
+            <select id="report-type">
+              <option>检查报告</option>
+              <option>门诊病历</option>
+              <option>处方与用药单</option>
+              <option>出院记录</option>
+              <option>其他资料</option>
+            </select>
+          </label>
+          <label>医院或科室<input id="report-source" placeholder="例如：上海市第一人民医院 · 消化内科"></label>
+          <label>备注<input id="report-note" placeholder="例如：肝功能、血脂、空腹血糖"></label>
+          <button class="primary-button" type="submit">保存并按日期归档</button>
+        </form>
+        <div class="report-list-heading"><h3>已归档报告</h3><span>最新日期在前</span></div>
+        <div id="report-list" class="report-list"></div>
+      </section>
+
+      <section class="bottom-sheet" id="record-detail-sheet" aria-hidden="true">
+        <div class="sheet-handle"></div>
+        <div id="record-detail-content"></div>
       </section>
 
       <section class="bottom-sheet" id="article-sheet" aria-hidden="true">
@@ -274,18 +368,6 @@
           <a href="https://www.aasld.org/practice-guidelines/primary-biliary-cholangitis" target="_blank" rel="noreferrer">AASLD · Primary Biliary Cholangitis</a><br>
           <a href="https://easl.eu/news/easl-cpgs-autoimmune-hepatitis-2025/" target="_blank" rel="noreferrer">EASL · 2025 AIH Guideline</a>
         </div>
-      </section>
-
-      <section class="bottom-sheet" id="settings-sheet" aria-hidden="true">
-        <div class="sheet-handle"></div>
-        <h2>设置</h2>
-        <div class="settings-list">
-          <button data-open="medication">药物方案管理 <span>›</span></button>
-          <button data-open="appointment">复查与就诊时间 <span>›</span></button>
-          <button>本地数据导出 <span>›</span></button>
-          <button>免责声明 <span>›</span></button>
-        </div>
-        <div class="local-note">▣ 所有数据仅保存在本机，不上传、不与他人共享。</div>
       </section>
 
       <section class="bottom-sheet" id="medication-sheet" aria-hidden="true">
