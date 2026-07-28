@@ -12,6 +12,8 @@ import {
 } from "./services/notificationService";
 import { HealthRecords } from "./HealthRecords";
 import { Profile } from "./Profile";
+import { FoodAssistant } from "./FoodAssistant";
+import { LearnCenter } from "./LearnCenter";
 
 const kindMeta = {
   thyroid: { label: "甲状腺用药", icon: "thyroid", color: "purple" },
@@ -217,8 +219,8 @@ export default function App() {
       </>}
 
       {page === "records" && <HealthRecords announce={announce} focusRecordId={recordToOpen} onRecordOpened={() => setRecordToOpen(null)} />}
-      {page === "food" && <ComingSoon title="饮食助手" description="正式食物数据与保守筛选功能将在后续里程碑接入。" />}
-      {page === "learn" && <ComingSoon title="安心科普" description="权威来源的患者科普内容将在后续里程碑接入。" />}
+      {page === "food" && <FoodAssistant />}
+      {page === "learn" && <LearnCenter />}
       {page === "mine" && <Profile medicationCount={medications.length} announce={announce} onOpenTreatment={() => setPage("today")} />}
 
       <nav className="bottom-nav">
@@ -239,10 +241,6 @@ export default function App() {
       {toast && <div className="toast">{toast}</div>}
     </main>
   );
-}
-
-function ComingSoon({ title, description }: { title: string; description: string }) {
-  return <><header className="topbar"><div><small>功能开发中</small><h1>{title}</h1></div></header><div className="empty-panel">{description}</div></>;
 }
 
 function MedicationCard({
