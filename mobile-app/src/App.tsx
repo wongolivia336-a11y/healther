@@ -56,6 +56,7 @@ export default function App() {
   const [editing, setEditing] = useState<Medication | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [toast, setToast] = useState("");
+  const [recordToOpen, setRecordToOpen] = useState<string | null>(null);
   const medicationRef = useRef<Medication[]>([]);
 
   const eventByMedication = useMemo(() => {
@@ -103,6 +104,12 @@ export default function App() {
   }
 
   async function handleNotificationAction(action: ActionPerformed) {
+    const reviewId = String(action.notification.extra?.reviewId ?? "");
+    if (reviewId) {
+      setRecordToOpen(reviewId);
+      setPage("records");
+      return;
+    }
     const medicationId = String(action.notification.extra?.medicationId ?? "");
     const medication = medicationRef.current.find(item => item.id === medicationId);
     if (!medication) return;
@@ -209,7 +216,7 @@ export default function App() {
       )}
       </>}
 
-      {page === "records" && <HealthRecords announce={announce} />}
+      {page === "records" && <HealthRecords announce={announce} focusRecordId={recordToOpen} onRecordOpened={() => setRecordToOpen(null)} />}
       {page === "food" && <ComingSoon title="饮食助手" description="正式食物数据与保守筛选功能将在后续里程碑接入。" />}
       {page === "learn" && <ComingSoon title="安心科普" description="权威来源的患者科普内容将在后续里程碑接入。" />}
       {page === "mine" && <Profile medicationCount={medications.length} announce={announce} onOpenTreatment={() => setPage("today")} />}

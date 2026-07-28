@@ -23,7 +23,15 @@ const tabs: Array<{ value: "all" | HealthRecordKind; label: string }> = [
   { value: "review", label: "复查" }
 ];
 
-export function HealthRecords({ announce }: { announce: (message: string) => void }) {
+export function HealthRecords({
+  announce,
+  focusRecordId,
+  onRecordOpened
+}: {
+  announce: (message: string) => void;
+  focusRecordId?: string | null;
+  onRecordOpened?: () => void;
+}) {
   const [records, setRecords] = useState<HealthRecord[]>([]);
   const [tab, setTab] = useState<"all" | HealthRecordKind>("all");
   const [detail, setDetail] = useState<HealthRecord | null>(null);
@@ -31,6 +39,18 @@ export function HealthRecords({ announce }: { announce: (message: string) => voi
   const [postVisit, setPostVisit] = useState(false);
 
   useEffect(() => { void listHealthRecords().then(setRecords); }, []);
+  useEffect(() => {
+    if (!focusRecordId || !records.length) return;
+    const record = records.find(item => item.id === focusRecordId);
+    if (record) {
+      setTab("all");
+      setDetail(record);
+      onRecordOpened?.();
+    } else {
+      announce("没有找到这条复查记录，可能已被删除");
+      onRecordOpened?.();
+    }
+  }, [announce, focusRecordId, onRecordOpened, records]);
   const visible = useMemo(
     () => records.filter(item => tab === "all" || item.kind === tab).sort((a, b) => b.date.localeCompare(a.date)),
     [records, tab]
