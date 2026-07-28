@@ -5,7 +5,7 @@ import type { Medication, MedicationEvent } from "../types";
 const STORAGE_KEY = "healther.mobile.medications.v1";
 const EVENT_KEY = "healther.mobile.events.v1";
 const sqlite = new SQLiteConnection(CapacitorSQLite);
-let db: SQLiteDBConnection | null = null;
+let dbPromise: Promise<SQLiteDBConnection> | null = null;
 
 const seedMedications: Medication[] = [
   {
@@ -40,15 +40,15 @@ const seedMedications: Medication[] = [
   }
 ];
 
-export async function getNativeDb(): Promise<SQLiteDBConnection> {
-  if (db) return db;
+async function initializeNativeDb(): Promise<SQLiteDBConnection> {
   const consistency = await sqlite.checkConnectionsConsistency();
   const existing = await sqlite.isConnection("healther", false);
-  db = consistency.result && existing.result
+  const connection = consistency.result && existing.result
     ? await sqlite.retrieveConnection("healther", false)
     : await sqlite.createConnection("healther", false, "no-encryption", 1, false);
-  await db.open();
-  await db.execute(`
+  const open = await connection.isDBOpen();
+  if (!open.result) await connection.open();
+  await connection.execute(`
     CREATE TABLE IF NOT EXISTS medications (
       id TEXT PRIMARY KEY NOT NULL,
       payload TEXT NOT NULL,
@@ -61,7 +61,17 @@ export async function getNativeDb(): Promise<SQLiteDBConnection> {
       payload TEXT NOT NULL
     );
   `);
-  return db;
+  return connection;
+}
+
+export function getNativeDb(): Promise<SQLiteDBConnection> {
+  if (!dbPromise) {
+    dbPromise = initializeNativeDb().catch(error => {
+      dbPromise = null;
+      throw error;
+    });
+  }
+  return dbPromise;
 }
 
 function readWeb<T>(key: string, fallback: T): T {
