@@ -132,3 +132,23 @@ export async function saveEvent(event: MedicationEvent): Promise<void> {
     [event.id, event.medicationId, event.scheduledFor, JSON.stringify(event)]
   );
 }
+
+export async function replaceMedications(items: Medication[]): Promise<void> {
+  if (!Capacitor.isNativePlatform()) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    return;
+  }
+  const nativeDb = await getNativeDb();
+  await nativeDb.execute("DELETE FROM medications;");
+  for (const item of items) await saveMedication(item);
+}
+
+export async function replaceEvents(items: MedicationEvent[]): Promise<void> {
+  if (!Capacitor.isNativePlatform()) {
+    localStorage.setItem(EVENT_KEY, JSON.stringify(items));
+    return;
+  }
+  const nativeDb = await getNativeDb();
+  await nativeDb.execute("DELETE FROM medication_events;");
+  for (const item of items) await saveEvent(item);
+}

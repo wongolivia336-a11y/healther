@@ -180,3 +180,13 @@ export async function clearPostVisitDraft(): Promise<void> {
   const db = await ensureTables();
   await db.run("DELETE FROM app_state WHERE id = 'post-visit-draft'");
 }
+
+export async function replaceHealthRecords(records: HealthRecord[]): Promise<void> {
+  if (!Capacitor.isNativePlatform()) {
+    localStorage.setItem(RECORD_KEY, JSON.stringify(records));
+    return;
+  }
+  const db = await ensureTables();
+  await db.execute("DELETE FROM health_records;");
+  for (const record of records) await saveHealthRecord(record);
+}

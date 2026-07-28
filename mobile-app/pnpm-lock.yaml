@@ -23,6 +23,9 @@ importers:
       '@capacitor/local-notifications':
         specifier: ^8.2.1
         version: 8.2.1(@capacitor/core@8.4.2)
+      '@capacitor/share':
+        specifier: 8.0.0
+        version: 8.0.0(@capacitor/core@8.4.2)
       react:
         specifier: ^19.2.8
         version: 19.2.8
@@ -77,6 +80,11 @@ packages:
 
   '@capacitor/local-notifications@8.2.1':
     resolution: {integrity: sha512-Bkim+MGl7UrDTjDferV4ECq0aWciTsa0k15+MX2jnx2PeWgEPvlBy5yrqzBlwEZPrtHFUvPVxPi5V66MPGHkAw==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+
+  '@capacitor/share@8.0.0':
+    resolution: {integrity: sha512-VU+xT4LFwr4keIC0UKDqGQVAiNlAHwoTMQg8wVVSxtn/k32VOvvtqFfu63qnXr40WKytZWrxJfVESvRjd761yg==}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
@@ -886,6 +894,10 @@ snapshots:
       '@capacitor/synapse': 1.0.4
 
   '@capacitor/local-notifications@8.2.1(@capacitor/core@8.4.2)':
+    dependencies:
+      '@capacitor/core': 8.4.2
+
+  '@capacitor/share@8.0.0(@capacitor/core@8.4.2)':
     dependencies:
       '@capacitor/core': 8.4.2
 

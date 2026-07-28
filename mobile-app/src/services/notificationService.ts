@@ -128,6 +128,13 @@ export async function refreshMedicationSchedules(medications: Medication[]): Pro
   failed: string[];
 }> {
   if (!Capacitor.isNativePlatform()) return { scheduled: 0, failed: [] };
+  const pending = await LocalNotifications.getPending();
+  const existingMedicationNotifications = pending.notifications
+    .filter(item => item.extra?.medicationId)
+    .map(item => ({ id: item.id }));
+  if (existingMedicationNotifications.length) {
+    await LocalNotifications.cancel({ notifications: existingMedicationNotifications });
+  }
   const enabled = medications.filter(item => item.enabled);
   const results = await Promise.allSettled(enabled.map(scheduleMedication));
   return {

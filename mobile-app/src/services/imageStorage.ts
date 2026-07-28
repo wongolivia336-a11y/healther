@@ -43,3 +43,13 @@ export async function deleteStoredImages(references: string[]): Promise<void> {
     })
   ));
 }
+
+export async function exportImageAsDataUrl(reference: string): Promise<string> {
+  if (!isStoredFileReference(reference)) return reference;
+  const result = await Filesystem.readFile({
+    path: reference.slice(REFERENCE_PREFIX.length),
+    directory: Directory.Data
+  });
+  if (typeof result.data !== "string") throw new Error("Unsupported image data");
+  return `data:image/jpeg;base64,${result.data}`;
+}
