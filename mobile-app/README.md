@@ -127,32 +127,44 @@ npx cap sync android
 
 ## APK 构建环境
 
-当前机器尚未安装 JDK 和 Android SDK，因此还不能运行 Gradle 生成 APK。需要：
+当前 Windows 开发机的 Android 工具链全部安装在 `E:\AndroidDev`，避免占用 C 盘：
 
-- JDK 21；
-- Android SDK；
+- Eclipse Temurin JDK 21；
+- Android SDK Command-line Tools；
 - Android SDK Platform 36；
-- Android Build Tools；
-- 正确设置 `JAVA_HOME` 和 `ANDROID_HOME`。
+- Android Build Tools 35/36；
+- Android Platform Tools；
+- Gradle 与 npm 缓存。
 
-环境完成后：
+不要把 `JAVA_HOME`、`ANDROID_HOME` 或 Gradle 缓存改回 C 盘。仓库提供了一键构建脚本，会临时设置全部环境变量：
 
 ```powershell
-cd "E:\OneDrive\文档\mum\mobile-app\android"
-.\gradlew.bat assembleDebug
+cd "E:\OneDrive\文档\mum\mobile-app"
+.\scripts\build-android-e.ps1
 ```
 
-调试 APK 默认生成在：
+构建完成后，可安装的调试包会复制到：
 
 ```text
-android\app\build\outputs\apk\debug\app-debug.apk
+E:\AndroidDev\output\Healther-v0.1.0-debug.apk
 ```
+
+首个已验证安装包：
+
+- 包名：`com.wongolivia.healther`
+- 版本：`1.0`（versionCode 1）
+- minSdk：24
+- targetSdk：36
+- 签名：Android debug certificate，APK Signature Scheme v2
+- SHA-256：`15EAF200411CAA6625D94DC5C48EF87BC814A92CD4899D62BD77DFF599A7CA33`
+
+调试签名仅用于家庭真机测试。对外正式分发前需要创建并离线保存正式签名密钥，生成 release APK 或 AAB。
 
 ## 下一步
 
-1. 安装 Android 构建环境并生成首个 APK；
-2. OPPO 真机验证通知权限和重复提醒；
-3. 增加滚动窗口续排机制；
-4. 完善日期、停药和多时段服药；
-5. 开发健康档案和报告图片存储；
+1. 在 OPPO 真机安装首个 APK；
+2. 验证通知、精确闹钟、后台运行、自启动和电池优化权限；
+3. 验证服药处理、重启恢复、报告拍照和加密备份；
+4. 根据真机走查结果修复问题；
+5. 创建正式签名并生成家庭分发版 release APK；
 6. 接入公共食物数据及权威科普内容后台。
