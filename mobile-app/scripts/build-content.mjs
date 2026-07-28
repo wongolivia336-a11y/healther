@@ -22,8 +22,8 @@ const manifest = JSON.parse(await readFile(new URL("src/content/contentManifest.
 
 for (const [name, value] of Object.entries({
   "manifest.json": manifest,
-  "foods-v1.json": foods,
-  "articles-v1.json": articles
+  [String(manifest.foods).replace(/^\.\//, "")]: foods,
+  [String(manifest.articles).replace(/^\.\//, "")]: articles
 })) {
   const path = join(outputDir, name);
   await mkdir(dirname(path), { recursive: true });
