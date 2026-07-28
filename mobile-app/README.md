@@ -4,6 +4,8 @@
 
 Healther 的正式 React + Capacitor 安卓工程。根目录的静态页面继续作为设计原型，本目录用于真实功能开发。
 
+正式品牌图标已经接入网页 favicon、Android Adaptive Icon、传统 launcher 图标、圆形图标、通知栏小图标和启动画面。源文件与规范位于 [`../assets/brand/`](../assets/brand/)。
+
 ## 第一里程碑
 
 当前已经实现可靠用药提醒、健康档案和个人资料管理。用药闭环为：

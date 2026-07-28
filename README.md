@@ -19,6 +19,8 @@
 
 ![Healther 现代简约 2.5D 原型预览](art-home-v2.png)
 
+![Healther App Logo](assets/brand/healther-logo-final.png)
+
 ## 当前功能
 
 ### 今日用药
