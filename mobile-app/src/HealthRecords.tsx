@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import type { HealthRecord, HealthRecordKind } from "./types";
-import { deleteHealthRecord, listHealthRecords, saveHealthRecord } from "./data/healthRepository";
+import type { HealthRecord, HealthRecordKind, PostVisitDraft } from "./types";
+import {
+  clearPostVisitDraft,
+  deleteHealthRecord,
+  getPostVisitDraft,
+  listHealthRecords,
+  saveHealthRecord,
+  savePostVisitDraft
+} from "./data/healthRepository";
 import { scheduleReviewReminder } from "./services/notificationService";
 
 const kindMeta: Record<HealthRecordKind, { label: string; icon: string; color: string }> = {
@@ -102,19 +109,6 @@ export function HealthRecords({ announce }: { announce: (message: string) => voi
   );
 }
 
-type PostVisitDraft = {
-  date: string;
-  hospital: string;
-  doctor: string;
-  advice: string;
-  diagnosis: string;
-  medication: string;
-  reviewDate: string;
-  reviewItems: string;
-  question: string;
-  images: string[];
-};
-
 const postVisitSteps = [
   ["这次去了哪里看诊？", "填写日期、医院、科室和医生。"],
   ["医生主要说了什么？", "用自己的话记录即可，不需要复述专业术语。"],
@@ -126,11 +120,35 @@ const postVisitSteps = [
 function PostVisitWizard({ onClose, onSave }: { onClose: () => void; onSave: (records: HealthRecord[]) => Promise<void> }) {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+  const [restored, setRestored] = useState(false);
+  const [validation, setValidation] = useState("");
   const [draft, setDraft] = useState<PostVisitDraft>({
     date: new Date().toISOString().slice(0, 10), hospital: "", doctor: "", advice: "",
-    diagnosis: "", medication: "", reviewDate: "", reviewItems: "", question: "", images: []
+    diagnosis: "", medication: "", reviewStatus: "", reviewDate: "", reviewItems: "", question: "", images: [],
+    savedAt: new Date().toISOString()
   });
-  const update = <K extends keyof PostVisitDraft>(key: K, value: PostVisitDraft[K]) => setDraft(current => ({ ...current, [key]: value }));
+  const update = <K extends keyof PostVisitDraft>(key: K, value: PostVisitDraft[K]) => {
+    setValidation("");
+    setDraft(current => ({ ...current, [key]: value }));
+  };
+
+  useEffect(() => {
+    void getPostVisitDraft().then(stored => {
+      if (stored) {
+        setDraft(stored);
+        setRestored(true);
+      }
+      setHydrated(true);
+    });
+  }, []);
+  useEffect(() => {
+    if (!hydrated) return;
+    const timer = window.setTimeout(() => {
+      void savePostVisitDraft({ ...draft, savedAt: new Date().toISOString() });
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [draft, hydrated]);
 
   async function pickImages(files: FileList | null) {
     if (!files?.length) return;
@@ -184,9 +202,29 @@ function PostVisitWizard({ onClose, onSave }: { onClose: () => void; onSave: (re
     });
     try {
       await onSave(records);
+      await clearPostVisitDraft();
     } finally {
       setSaving(false);
     }
+  }
+
+  function validateStep(): boolean {
+    const error =
+      step === 0 && (!draft.date || !draft.hospital.trim() || !draft.doctor.trim()) ? "请填写就诊日期、医院科室和医生；记不清可直接写“记不清”。" :
+      step === 1 && !draft.advice.trim() ? "请记录医生主要意见；记不清可选择下方快捷项。" :
+      step === 2 && !draft.diagnosis.trim() ? "请明确填写有无诊断或身体变化。" :
+      step === 3 && !draft.medication.trim() ? "请明确填写用药有无变化。" :
+      step === 4 && !draft.reviewStatus ? "请选择医生是否安排了下次复查。" :
+      step === 4 && draft.reviewStatus === "scheduled" && (!draft.reviewDate || !draft.reviewItems.trim()) ? "已安排复查时，需要填写日期和检查项目。" :
+      step === 4 && !draft.question.trim() ? "请填写下次想问医生的问题；没有可以填写“暂时没有”。" : "";
+    setValidation(error);
+    return !error;
+  }
+
+  function next() {
+    if (!validateStep()) return;
+    if (step < 4) setStep(current => current + 1);
+    else void finish();
   }
 
   return (
@@ -195,6 +233,7 @@ function PostVisitWizard({ onClose, onSave }: { onClose: () => void; onSave: (re
         <div className="handle" />
         <header><div><small>就诊后整理 · {step + 1} / 5</small><h2>{postVisitSteps[step][0]}</h2></div><button onClick={onClose}>×</button></header>
         <div className="wizard-progress"><i style={{ width: `${(step + 1) * 20}%` }} /></div>
+        {restored && <div className="draft-restored">已恢复上次未完成的整理草稿</div>}
         <p className="wizard-help">{postVisitSteps[step][1]}</p>
         {step === 0 && <>
           <div className="field-grid"><label>就诊日期<input type="date" value={draft.date} onChange={event => update("date", event.target.value)} /></label><label>医生<input value={draft.doctor} onChange={event => update("doctor", event.target.value)} placeholder="例如：张医生" /></label></div>
@@ -202,17 +241,19 @@ function PostVisitWizard({ onClose, onSave }: { onClose: () => void; onSave: (re
           <div className="native-upload"><label><b>拍照</b><span>病历、处方或检查单</span><input type="file" accept="image/*" capture="environment" onChange={event => void pickImages(event.target.files)} /></label><label><b>相册</b><span>最多保存 8 张</span><input type="file" accept="image/*" multiple onChange={event => void pickImages(event.target.files)} /></label></div>
           {draft.images.length > 0 && <div className="selected-images">已选择 {draft.images.length} 张原始资料</div>}
         </>}
-        {step === 1 && <label>医生主要意见<textarea value={draft.advice} onChange={event => update("advice", event.target.value)} placeholder="例如：目前指标总体稳定，继续当前方案" /></label>}
-        {step === 2 && <label>诊断与身体变化<textarea value={draft.diagnosis} onChange={event => update("diagnosis", event.target.value)} placeholder="例如：诊断无变化；近期睡眠不太好" /></label>}
-        {step === 3 && <><label>本次用药变化<textarea value={draft.medication} onChange={event => update("medication", event.target.value)} placeholder="例如：甲泼尼龙调整为……；其他药物不变" /></label><div className="safety-note">记录不会直接修改服药提醒。保存后请在“当前用药方案”中核对并确认。</div></>}
+        {step === 1 && <><label>医生主要意见<textarea value={draft.advice} onChange={event => update("advice", event.target.value)} placeholder="例如：目前指标总体稳定，继续当前方案" /></label><div className="quick-options"><button onClick={() => update("advice", "医生建议继续当前方案，暂不调整。")}>继续当前方案</button><button onClick={() => update("advice", "记不清具体意见，下次需要向医生确认。")}>记不清</button></div></>}
+        {step === 2 && <><label>诊断与身体变化<textarea value={draft.diagnosis} onChange={event => update("diagnosis", event.target.value)} placeholder="例如：诊断无变化；近期睡眠不太好" /></label><div className="quick-options"><button onClick={() => update("diagnosis", "诊断和身体状况没有明确变化。")}>没有变化</button><button onClick={() => update("diagnosis", "记不清是否有变化，下次需要向医生确认。")}>记不清</button></div></>}
+        {step === 3 && <><label>本次用药变化<textarea value={draft.medication} onChange={event => update("medication", event.target.value)} placeholder="例如：甲泼尼龙调整为……；其他药物不变" /></label><div className="quick-options"><button onClick={() => update("medication", "医生未调整当前用药方案。")}>没有变化</button><button onClick={() => update("medication", "记不清具体用药调整，需要根据处方或向医生确认。")}>记不清</button></div><div className="safety-note">记录不会直接修改服药提醒。保存后请在“当前用药方案”中核对并确认。</div></>}
         {step === 4 && <>
-          <label>下次复查日期<input type="date" value={draft.reviewDate} onChange={event => update("reviewDate", event.target.value)} /></label>
-          <label>需要检查的项目<textarea value={draft.reviewItems} onChange={event => update("reviewItems", event.target.value)} placeholder="例如：肝功能、血脂、空腹血糖" /></label>
+          <div className="review-status"><button className={draft.reviewStatus === "scheduled" ? "active" : ""} onClick={() => update("reviewStatus", "scheduled")}>已安排复查</button><button className={draft.reviewStatus === "not-scheduled" ? "active" : ""} onClick={() => update("reviewStatus", "not-scheduled")}>医生未安排</button><button className={draft.reviewStatus === "uncertain" ? "active" : ""} onClick={() => update("reviewStatus", "uncertain")}>记不清</button></div>
+          {draft.reviewStatus === "scheduled" && <><label>下次复查日期<input type="date" value={draft.reviewDate} onChange={event => update("reviewDate", event.target.value)} /></label>
+          <label>需要检查的项目<textarea value={draft.reviewItems} onChange={event => update("reviewItems", event.target.value)} placeholder="例如：肝功能、血脂、空腹血糖" /></label></>}
           <label>下次想问医生<input value={draft.question} onChange={event => update("question", event.target.value)} /></label>
         </>}
+        {validation && <div className="validation-error">{validation}</div>}
         <div className="wizard-actions">
           <button disabled={step === 0 || saving} onClick={() => setStep(current => current - 1)}>上一步</button>
-          <button className="save-button" disabled={saving || (step === 0 && !draft.date)} onClick={() => step < 4 ? setStep(current => current + 1) : void finish()}>{saving ? "正在保存…" : step === 4 ? "完成整理" : "保存并继续"}</button>
+          <button className="save-button" disabled={saving || !hydrated} onClick={next}>{saving ? "正在保存…" : step === 4 ? "完成整理" : "保存并继续"}</button>
         </div>
       </section>
     </div>

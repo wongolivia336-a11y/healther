@@ -59,4 +59,19 @@ export interface UserProfile {
   emergencyContact: string;
   updatedAt: string;
 }
+
+export interface PostVisitDraft {
+  date: string;
+  hospital: string;
+  doctor: string;
+  advice: string;
+  diagnosis: string;
+  medication: string;
+  reviewStatus: "scheduled" | "not-scheduled" | "uncertain" | "";
+  reviewDate: string;
+  reviewItems: string;
+  question: string;
+  images: string[];
+  savedAt: string;
+}
 import type { PermissionState } from "@capacitor/core";

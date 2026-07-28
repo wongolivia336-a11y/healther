@@ -1,9 +1,10 @@
 import { Capacitor } from "@capacitor/core";
-import type { HealthRecord, UserProfile } from "../types";
+import type { HealthRecord, PostVisitDraft, UserProfile } from "../types";
 import { getNativeDb } from "./medicationRepository";
 
 const RECORD_KEY = "healther.mobile.health-records.v1";
 const PROFILE_KEY = "healther.mobile.profile.v1";
+const POST_VISIT_DRAFT_KEY = "healther.mobile.post-visit-draft.v1";
 
 const now = new Date().toISOString();
 const seedRecords: HealthRecord[] = [
@@ -78,6 +79,11 @@ async function ensureTables() {
       payload TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS app_state (
+      id TEXT PRIMARY KEY NOT NULL,
+      payload TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
   `);
   return db;
 }
@@ -145,4 +151,32 @@ export async function saveUserProfile(profile: UserProfile): Promise<void> {
     "INSERT OR REPLACE INTO user_profile (id, payload, updated_at) VALUES ('owner', ?, ?)",
     [JSON.stringify(profile), profile.updatedAt]
   );
+}
+
+export async function getPostVisitDraft(): Promise<PostVisitDraft | null> {
+  if (!Capacitor.isNativePlatform()) return readWeb<PostVisitDraft | null>(POST_VISIT_DRAFT_KEY, null);
+  const db = await ensureTables();
+  const result = await db.query("SELECT payload FROM app_state WHERE id = 'post-visit-draft'");
+  return result.values?.length ? JSON.parse(String(result.values[0].payload)) as PostVisitDraft : null;
+}
+
+export async function savePostVisitDraft(draft: PostVisitDraft): Promise<void> {
+  if (!Capacitor.isNativePlatform()) {
+    localStorage.setItem(POST_VISIT_DRAFT_KEY, JSON.stringify(draft));
+    return;
+  }
+  const db = await ensureTables();
+  await db.run(
+    "INSERT OR REPLACE INTO app_state (id, payload, updated_at) VALUES ('post-visit-draft', ?, ?)",
+    [JSON.stringify(draft), draft.savedAt]
+  );
+}
+
+export async function clearPostVisitDraft(): Promise<void> {
+  if (!Capacitor.isNativePlatform()) {
+    localStorage.removeItem(POST_VISIT_DRAFT_KEY);
+    return;
+  }
+  const db = await ensureTables();
+  await db.run("DELETE FROM app_state WHERE id = 'post-visit-draft'");
 }
