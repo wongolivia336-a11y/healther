@@ -1,6 +1,7 @@
 import type { HealthRecord } from "../types";
 import { deleteHealthRecord, saveHealthRecord } from "../data/healthRepository";
 import { cancelReviewReminder, scheduleReviewReminder } from "./notificationService";
+import { deleteStoredImages, persistImageDataUrl } from "./imageStorage";
 
 export async function saveHealthRecordBundle(records: HealthRecord[]): Promise<{
   reminderFailures: string[];
@@ -20,5 +21,23 @@ export async function saveHealthRecordBundle(records: HealthRecord[]): Promise<{
 
 export async function removeHealthRecord(record: HealthRecord): Promise<void> {
   if (record.kind === "review") await cancelReviewReminder(record.id);
+  await deleteStoredImages(record.images);
   await deleteHealthRecord(record.id);
+}
+
+export async function migrateInlineRecordImages(records: HealthRecord[]): Promise<HealthRecord[]> {
+  const migrated: HealthRecord[] = [];
+  for (const record of records) {
+    if (!record.images.some(image => image.startsWith("data:"))) {
+      migrated.push(record);
+      continue;
+    }
+    const images = await Promise.all(record.images.map(image =>
+      image.startsWith("data:") ? persistImageDataUrl(image) : Promise.resolve(image)
+    ));
+    const next = { ...record, images, updatedAt: new Date().toISOString() };
+    await saveHealthRecord(next);
+    migrated.push(next);
+  }
+  return migrated;
 }

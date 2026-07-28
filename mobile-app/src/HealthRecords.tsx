@@ -6,7 +6,8 @@ import {
   listHealthRecords,
   savePostVisitDraft
 } from "./data/healthRepository";
-import { removeHealthRecord, saveHealthRecordBundle } from "./services/healthRecordService";
+import { migrateInlineRecordImages, removeHealthRecord, saveHealthRecordBundle } from "./services/healthRecordService";
+import { persistImageDataUrl, resolveImageReference } from "./services/imageStorage";
 
 const kindMeta: Record<HealthRecordKind, { label: string; icon: string; color: string }> = {
   visit: { label: "就诊", icon: "医", color: "blue" },
@@ -38,7 +39,12 @@ export function HealthRecords({
   const [adding, setAdding] = useState(false);
   const [postVisit, setPostVisit] = useState(false);
 
-  useEffect(() => { void listHealthRecords().then(setRecords); }, []);
+  useEffect(() => {
+    void listHealthRecords()
+      .then(migrateInlineRecordImages)
+      .then(setRecords)
+      .catch(() => announce("部分报告图片迁移失败，请稍后重试"));
+  }, []);
   useEffect(() => {
     if (!focusRecordId || !records.length) return;
     const record = records.find(item => item.id === focusRecordId);
@@ -158,7 +164,8 @@ function PostVisitWizard({ onClose, onSave }: { onClose: () => void; onSave: (re
     if (!files?.length) return;
     setSaving(true);
     try {
-      const images = await Promise.all([...files].map(compressImage));
+      const compressed = await Promise.all([...files].slice(0, 8 - draft.images.length).map(compressImage));
+      const images = await Promise.all(compressed.map(persistImageDataUrl));
       update("images", [...draft.images, ...images].slice(0, 8));
     } finally {
       setSaving(false);
@@ -274,9 +281,7 @@ function RecordDetail({ record, onClose, onDelete }: { record: HealthRecord; onC
         <dl className="detail-list">
           {Object.entries(record.details).filter(([, value]) => value).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
         </dl>
-        {record.images.length > 0 && <><h3 className="gallery-title">原始报告 · {record.images.length} 张</h3><div className="record-gallery">
-          {record.images.map((image, index) => <button key={index} onClick={() => window.open(image, "_blank")}><img src={image} alt={`报告第 ${index + 1} 张`} /></button>)}
-        </div></>}
+        {record.images.length > 0 && <><h3 className="gallery-title">原始报告 · {record.images.length} 张</h3><StoredImageGallery references={record.images} /></>}
         <button className="danger-button" onClick={onDelete}>删除这条记录</button>
       </section>
     </div>
@@ -300,7 +305,8 @@ function RecordEditor({ onClose, onSave }: { onClose: () => void; onSave: (recor
     if (!files?.length) return;
     setSavingImages(true);
     try {
-      const values = await Promise.all([...files].map(compressImage));
+      const compressed = await Promise.all([...files].slice(0, 8 - images.length).map(compressImage));
+      const values = await Promise.all(compressed.map(persistImageDataUrl));
       setImages(current => [...current, ...values].slice(0, 8));
     } finally {
       setSavingImages(false);
@@ -369,6 +375,26 @@ function RecordEditor({ onClose, onSave }: { onClose: () => void; onSave: (recor
       </section>
     </div>
   );
+}
+
+function StoredImageGallery({ references }: { references: string[] }) {
+  const [urls, setUrls] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    void Promise.all(references.map(reference => resolveImageReference(reference).catch(() => ""))).then(values => {
+      if (active) setUrls(values);
+    });
+    return () => { active = false; };
+  }, [references]);
+  return <>
+    <div className="record-gallery">
+      {urls.map((url, index) => url
+        ? <button key={index} onClick={() => setSelected(url)}><img src={url} alt={`报告第 ${index + 1} 张`} /></button>
+        : <div key={index} className="broken-image">图片无法读取</div>)}
+    </div>
+    {selected && <div className="image-viewer" onClick={() => setSelected(null)}><button aria-label="关闭原图">×</button><img src={selected} alt="报告原图" /></div>}
+  </>;
 }
 
 function compressImage(file: File): Promise<string> {
