@@ -169,6 +169,15 @@ Healther 图标采用“中心人物 + 双层照护路径 + 完成上扬段”�
 
 主色为 `#6F8FDC`、`#8BB0F2`、`#72CDBD`，背景为 `#F4F8FF`。Android 使用 Adaptive Icon，前景必须位于系统安全区域。
 
+### 6.6 可扩展视觉资产
+
+插画、图标来源、语义映射、同步方式和版本命名统一维护在 [`assets/ASSET_SYSTEM.md`](assets/ASSET_SYSTEM.md)。
+
+- 组件通过 `mobile-app/src/visualAssets.ts` 引用插画；
+- 通用 SVG 通过 `mobile-app/src/Icon.tsx` 的语义名称引用；
+- 未来的指标趋势、就诊录音、内容更新和备份场景已经预留同风格插画；
+- 新资产不得直接散写到组件路径中，也不得覆盖旧版插画导致无法回退。
+
 ## 7. 饮食助手边界
 
 首版只提供保守通用筛选：

@@ -3,6 +3,8 @@ import {
   foodCategories, foodRatingMeta, foods, foodSources, mealOptions,
   type FoodCategory, type FoodItem
 } from "./content/foodData";
+import { Icon } from "./Icon";
+import { illustrations } from "./visualAssets";
 
 export function FoodAssistant() {
   const [meal, setMeal] = useState<(typeof mealOptions)[number]>("午餐");
@@ -18,7 +20,7 @@ export function FoodAssistant() {
     return (
       <section className="feature-page food-page">
         <header className="detail-topbar">
-          <button onClick={() => setSelected(null)} aria-label="返回饮食助手">‹</button>
+          <button onClick={() => setSelected(null)} aria-label="返回饮食助手"><Icon name="back" /></button>
           <div><small>{selected.category}</small><h1>{selected.name}</h1></div>
         </header>
         <div className={`food-verdict ${selected.rating}`}>
@@ -51,7 +53,7 @@ export function FoodAssistant() {
       <header className="topbar"><div><small>这顿饭怎么选</small><h1>饮食助手</h1></div></header>
       <section className="feature-hero food-hero">
         <div><span>保守通用筛选</span><h2>不用忌口一切，先把份量和搭配看清楚</h2><p>适合同时关注血糖、血脂、肝胆与骨骼健康。</p></div>
-        <img src="/assets/illustrations/food-guide-v2.png" alt="" />
+        <img src={illustrations.foodGuide} alt="" />
       </section>
 
       <div className="feature-section compact">
@@ -72,7 +74,7 @@ export function FoodAssistant() {
               <span className={`rating-dot ${item.rating}`} />
               <div><h3>{item.name}</h3><p>{item.portion}</p></div>
               <strong className={item.rating}>{meta.label}</strong>
-              <i>›</i>
+              <Icon name="next" size={16} />
             </button>
           );
         })}

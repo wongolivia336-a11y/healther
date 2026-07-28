@@ -30,6 +30,8 @@ New-Item -ItemType Directory -Force -Path $outputRoot, $env:GRADLE_USER_HOME, $e
 
 Push-Location $projectRoot
 try {
+    & (Join-Path $PSScriptRoot "sync-assets.ps1")
+
     npm.cmd run build
     if ($LASTEXITCODE -ne 0) { throw "Web build failed." }
 

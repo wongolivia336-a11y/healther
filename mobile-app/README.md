@@ -70,6 +70,8 @@ Healther 的正式 React + Capacitor 安卓工程。根目录的静态页面继�
 - 饮食助手离线首版：按餐次和食物类别浏览 24 种常见食物，展示“更适合 / 注意份量 / 谨慎选择”、通用份量、多疾病理由和替代选择；
 - 安心科普离线首版：8 篇来自 NIDDK、AASLD 等权威来源的中文大白话内容，支持主题筛选、来源等级、原文链接和复诊问题；
 - 饮食与科普均不提供诊断、个体处方或自动用药调整，首版内容完成来源核对但尚未经过临床专业人员审稿。
+- 可扩展视觉资产系统：8 个统一风格的 2.5D 插画场景、35 个 Lucide 通用 SVG、4 个 Health Icons 医疗 SVG，以及集中式 `Icon` / `visualAssets` 语义目录；
+- 资产同步脚本会在 Android 构建前自动将根目录设计源复制到正式应用，避免版本遗漏。
 
 ## 数据存储
 
@@ -159,7 +161,7 @@ E:\AndroidDev\output\Healther-v0.1.0-debug.apk
 - minSdk：24
 - targetSdk：36
 - 签名：Android debug certificate，APK Signature Scheme v2
-- SHA-256：`66198EB3C1DC357808BB73494637DD7AAB9F1141E42792A7B79155840C71A577`
+- SHA-256：`A3AA68630276D936906522BC1D383838B8AEAB1CFFAFF009F0C1BE0149B72491`
 
 调试签名仅用于家庭真机测试。对外正式分发前需要创建并离线保存正式签名密钥，生成 release APK 或 AAB。
 

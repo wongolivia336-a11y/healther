@@ -8,6 +8,8 @@ import {
 } from "./data/healthRepository";
 import { migrateInlineRecordImages, removeHealthRecord, saveHealthRecordBundle } from "./services/healthRecordService";
 import { persistImageDataUrl, resolveImageReference } from "./services/imageStorage";
+import { Icon } from "./Icon";
+import { illustrations } from "./visualAssets";
 
 const kindMeta: Record<HealthRecordKind, { label: string; icon: string; color: string }> = {
   visit: { label: "就诊", icon: "医", color: "blue" },
@@ -88,8 +90,12 @@ export function HealthRecords({
     <>
       <header className="topbar">
         <div><small>统一健康时间线</small><h1>健康档案</h1></div>
-        <button className="round-button" aria-label="新增健康记录" onClick={() => setAdding(true)}>＋</button>
+        <button className="round-button" aria-label="新增健康记录" onClick={() => setAdding(true)}><Icon name="add" /></button>
       </header>
+      <section className="records-asset-banner">
+        <div><span>集中整理</span><h2>报告、就诊和复查都在一条时间线上</h2></div>
+        <img src={illustrations.recordsOrganizer} alt="" />
+      </section>
       <div className="record-tabs">
         {tabs.map(item => <button key={item.value} className={tab === item.value ? "active" : ""} onClick={() => setTab(item.value)}>{item.label}</button>)}
       </div>

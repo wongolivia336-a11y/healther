@@ -14,6 +14,8 @@ import { HealthRecords } from "./HealthRecords";
 import { Profile } from "./Profile";
 import { FoodAssistant } from "./FoodAssistant";
 import { LearnCenter } from "./LearnCenter";
+import { Icon } from "./Icon";
+import { illustrations } from "./visualAssets";
 
 const kindMeta = {
   thyroid: { label: "甲状腺用药", icon: "thyroid", color: "purple" },
@@ -175,7 +177,7 @@ export default function App() {
       {page === "today" && <>
       <header className="topbar">
         <div><small>{new Intl.DateTimeFormat("zh-CN", { month: "long", day: "numeric", weekday: "long" }).format(new Date())}</small><h1>今日</h1></div>
-        <button className="round-button" aria-label="提醒设置" onClick={() => void requestExactAlarm()}>◉</button>
+        <button className="round-button" aria-label="提醒设置" onClick={() => void requestExactAlarm()}><Icon name="bell" /></button>
       </header>
 
       <section className={`capability ${capability.permission === "granted" && capability.exactAlarm === "granted" ? "ready" : ""}`}>
@@ -188,7 +190,7 @@ export default function App() {
 
       <section className="hero">
         <div><span>{pending.length} 项待处理</span><h2>今日用药</h2><p>每种药都可以设置自己的重复提醒规则</p></div>
-        <img src="/assets/illustrations/medication-hero-v2.png" alt="" />
+        <img src={illustrations.medication} alt="" />
       </section>
 
       <div className="section-title"><h2>待处理</h2><button onClick={() => { setEditing(null); setSheetOpen(true); }}>＋ 新增药物</button></div>
@@ -224,11 +226,11 @@ export default function App() {
       {page === "mine" && <Profile medicationCount={medications.length} announce={announce} onOpenTreatment={() => setPage("today")} />}
 
       <nav className="bottom-nav">
-        <button className={page === "today" ? "active" : ""} onClick={() => setPage("today")}><i className="icon home" />今日</button>
-        <button className={page === "records" ? "active" : ""} onClick={() => setPage("records")}><i className="icon records" />健康档案</button>
-        <button className={page === "food" ? "active" : ""} onClick={() => setPage("food")}><i className="icon food" />饮食助手</button>
-        <button className={page === "learn" ? "active" : ""} onClick={() => setPage("learn")}><i className="icon learn" />安心科普</button>
-        <button className={page === "mine" ? "active" : ""} onClick={() => setPage("mine")}><i className="icon mine" />我的</button>
+        <button className={page === "today" ? "active" : ""} onClick={() => setPage("today")}><Icon name="home" size={19} />今日</button>
+        <button className={page === "records" ? "active" : ""} onClick={() => setPage("records")}><Icon name="records" size={19} />健康档案</button>
+        <button className={page === "food" ? "active" : ""} onClick={() => setPage("food")}><Icon name="food" size={19} />饮食助手</button>
+        <button className={page === "learn" ? "active" : ""} onClick={() => setPage("learn")}><Icon name="learn" size={19} />安心科普</button>
+        <button className={page === "mine" ? "active" : ""} onClick={() => setPage("mine")}><Icon name="mine" size={19} />我的</button>
       </nav>
 
       {sheetOpen && (

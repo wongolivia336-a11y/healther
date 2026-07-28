@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { UserProfile } from "./types";
 import { getUserProfile, saveUserProfile } from "./data/healthRepository";
 import { exportEncryptedBackup, restoreEncryptedBackup } from "./services/backupService";
+import { illustrations } from "./visualAssets";
 
 export function Profile({ medicationCount, announce, onOpenTreatment }: { medicationCount: number; announce: (message: string) => void; onOpenTreatment: () => void }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -88,6 +89,7 @@ function BackupManager({ onClose, announce }: { onClose: () => void; announce: (
       <section className="editor-sheet backup-sheet">
         <div className="handle" />
         <header><div><small>本地加密 · 不上传服务器</small><h2>备份、恢复与换机</h2></div><button onClick={onClose}>×</button></header>
+        <img className="backup-illustration" src={illustrations.privateBackup} alt="" />
         <div className="backup-warning">备份包含健康资料和报告图片。密码无法找回，请与备份文件分开妥善保存。</div>
         <h3>导出加密备份</h3>
         <label>设置备份密码（至少 6 位）<input type="password" value={password} onChange={event => setPassword(event.target.value)} /></label>

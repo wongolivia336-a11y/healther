@@ -3,6 +3,8 @@ import {
   confidenceMeta, learnArticles, learnTopics,
   type LearnArticle, type LearnTopic
 } from "./content/learnData";
+import { Icon } from "./Icon";
+import { illustrations } from "./visualAssets";
 
 export function LearnCenter() {
   const [topic, setTopic] = useState<"全部" | LearnTopic>("全部");
@@ -15,7 +17,7 @@ export function LearnCenter() {
     return (
       <section className="feature-page learn-page">
         <header className="detail-topbar">
-          <button onClick={() => setSelected(null)} aria-label="返回安心科普">‹</button>
+          <button onClick={() => setSelected(null)} aria-label="返回安心科普"><Icon name="back" /></button>
           <div><small>{selected.topic}</small><h1>安心科普</h1></div>
         </header>
         <article className="article-detail">
@@ -27,7 +29,7 @@ export function LearnCenter() {
           <section><h3>下次可以问医生</h3><ul>{selected.doctorQuestions.map(question => <li key={question}>{question}</li>)}</ul></section>
           <footer>
             <span>{selected.source.organization} · 来源核对 {selected.source.reviewedAt}</span>
-            <a href={selected.source.url} target="_blank" rel="noreferrer">查看权威原文 ↗</a>
+            <a href={selected.source.url} target="_blank" rel="noreferrer">查看权威原文 <Icon name="external" size={12} /></a>
           </footer>
         </article>
       </section>
@@ -39,7 +41,7 @@ export function LearnCenter() {
       <header className="topbar"><div><small>少一点搜索，多一点确定</small><h1>安心科普</h1></div></header>
       <section className="feature-hero learn-hero">
         <div><span>权威来源 · 有限推送</span><h2>慢性病需要理解，不需要被严重病例包围</h2><p>每篇都告诉你：现在是否需要改变安排。</p></div>
-        <img src="/assets/illustrations/learning-path-v2.png" alt="" />
+        <img src={illustrations.learningPath} alt="" />
       </section>
       <div className="choice-chips topic-chips">
         {learnTopics.map(item => <button key={item} className={topic === item ? "active" : ""} onClick={() => setTopic(item)}>{item}</button>)}
@@ -53,7 +55,7 @@ export function LearnCenter() {
             </div>
             <h2>{article.title}</h2>
             <p>{article.takeaway}</p>
-            <footer><span>{article.source.organization}</span><i>阅读全文 ›</i></footer>
+            <footer><span>{article.source.organization}</span><i>阅读全文 <Icon name="next" size={12} /></i></footer>
           </button>
         ))}
       </div>
